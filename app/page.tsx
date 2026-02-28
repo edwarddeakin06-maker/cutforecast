@@ -42,66 +42,97 @@ const getPhysiqueTargets = (value: number) => {
   const proteinMultiplier = 2 + value * 0.006;
   return { targetBF, proteinMultiplier };
 };
-
-// 🔥 ANATOMY FIGURE (curved + muscle lines)
 const PhysiqueFigure = ({ level }: { level: number }) => {
   const t = level;
 
-  const shoulder = 40 + t * 40;
-  const waist = 28 - t * 10;
-  const chest = 20 + t * 12;
-  const arm = 4 + t * 6;
-  const leg = 10 + t * 6;
+  const shoulder = 50 + t * 40;
+  const waist = 32 - t * 10;
+  const chest = 25 + t * 15;
+  const armSize = 12 + t * 10;
+  const legSize = 16 + t * 10;
 
-  const muscleOpacity = t;
+  const muscle = 0.3 + t * 0.7;
 
   return (
-    <svg width="160" height="240" viewBox="0 0 160 240" className="mx-auto transition-all duration-500">
+    <svg width="220" height="300" viewBox="0 0 220 300" className="mx-auto">
 
       {/* Head */}
-      <circle cx="80" cy="25" r="12" fill="#d4d4d4" />
+      <ellipse cx="110" cy="30" rx="18" ry="22" fill="#d4d4d4" />
+
+      {/* Neck */}
+      <rect x="100" y="50" width="20" height="15" fill="#d4d4d4" />
 
       {/* Torso */}
       <path
         d={`
-          M ${80 - shoulder / 2} 60
-          Q 80 ${60 + chest}, ${80 + shoulder / 2} 60
-          L ${80 + waist / 2} 130
-          Q 80 ${130 + chest / 2}, ${80 - waist / 2} 130
+          M ${110 - shoulder / 2} 70
+          Q 110 ${70 + chest} ${110 + shoulder / 2} 70
+          L ${110 + waist / 2} 160
+          Q 110 ${160 + chest / 2} ${110 - waist / 2} 160
           Z
         `}
         fill="#e5e5e5"
       />
 
-      {/* Arms */}
-      <line x1={80 - shoulder / 2 - 5} y1="75" x2={80 - shoulder / 2 - 25} y2="130" stroke="#e5e5e5" strokeWidth={arm} />
-      <line x1={80 + shoulder / 2 + 5} y1="75" x2={80 + shoulder / 2 + 25} y2="130" stroke="#e5e5e5" strokeWidth={arm} />
+      {/* Shoulders (delts) */}
+      <ellipse cx={110 - shoulder / 2} cy="80" rx="18" ry="12" fill="#e5e5e5" />
+      <ellipse cx={110 + shoulder / 2} cy="80" rx="18" ry="12" fill="#e5e5e5" />
 
-      {/* Legs */}
-      <line x1={80 - leg} y1="130" x2={65 - leg} y2="220" stroke="#e5e5e5" strokeWidth="6" />
-      <line x1={80 + leg} y1="130" x2={95 + leg} y2="220" stroke="#e5e5e5" strokeWidth="6" />
+      {/* Arms (proper shapes) */}
+      <ellipse cx={110 - shoulder / 2 - 15} cy="120" rx={armSize} ry="28" fill="#e5e5e5" />
+      <ellipse cx={110 + shoulder / 2 + 15} cy="120" rx={armSize} ry="28" fill="#e5e5e5" />
 
-      {/* 🔥 Muscle definition */}
-      <g opacity={muscleOpacity} stroke="#a3a3a3" strokeWidth="1.5">
+      {/* Forearms */}
+      <ellipse cx={110 - shoulder / 2 - 10} cy="165" rx={armSize * 0.8} ry="22" fill="#e5e5e5" />
+      <ellipse cx={110 + shoulder / 2 + 10} cy="165" rx={armSize * 0.8} ry="22" fill="#e5e5e5" />
 
-        {/* Chest line */}
-        <line x1="50" y1="80" x2="110" y2="80" />
+      {/* Quads */}
+      <ellipse cx={110 - 20} cy="200" rx={legSize} ry="40" fill="#e5e5e5" />
+      <ellipse cx={110 + 20} cy="200" rx={legSize} ry="40" fill="#e5e5e5" />
 
-        {/* Abs */}
-        <line x1="70" y1="95" x2="90" y2="95" />
-        <line x1="70" y1="105" x2="90" y2="105" />
-        <line x1="70" y1="115" x2="90" y2="115" />
+      {/* Calves */}
+      <ellipse cx={110 - 20} cy="250" rx={legSize * 0.7} ry="28" fill="#e5e5e5" />
+      <ellipse cx={110 + 20} cy="250" rx={legSize * 0.7} ry="28" fill="#e5e5e5" />
+
+      {/* 🔥 Muscle detail */}
+      <g opacity={muscle} stroke="#9ca3af" strokeWidth="1.5" fill="none">
+
+        {/* Traps */}
+        <path d="M95 70 L110 55 L125 70" />
+
+        {/* Chest (pec split) */}
+        <path d={`M85 ${90 - t * 5} Q110 ${80 - t * 5} 135 ${90 - t * 5}`} />
+        <line x1="110" y1="85" x2="110" y2="115" />
+
+        {/* Abs (clean grid) */}
+        <line x1="100" y1="105" x2="120" y2="105" />
+        <line x1="100" y1="120" x2="120" y2="120" />
+        <line x1="100" y1="135" x2="120" y2="135" />
 
         {/* Obliques */}
-        <line x1="60" y1="95" x2="70" y2="110" />
-        <line x1="100" y1="95" x2="90" y2="110" />
+        <path d="M90 110 L100 145" />
+        <path d="M130 110 L120 145" />
+
+        {/* Arms detail */}
+        <path d="M75 110 Q85 130 85 150" />
+        <path d="M145 110 Q135 130 135 150" />
+
+        {/* Quads lines */}
+        <line x1="90" y1="180" x2="85" y2="230" />
+        <line x1="130" y1="180" x2="135" y2="230" />
+
+        {/* Calves */}
+        <line x1="85" y1="240" x2="90" y2="270" />
+        <line x1="135" y1="240" x2="130" y2="270" />
+
+        {/* Groin */}
+        <path d="M100 160 Q110 170 120 160" />
 
       </g>
 
     </svg>
   );
 };
-
 export default function Home() {
   const chartRef = useRef<any>(null);
 
@@ -118,7 +149,7 @@ export default function Home() {
     const w = Number(weight);
     const bf = Number(bodyFat) / 100;
 
-    if (!w || !bf) return alert("Fill in your stats");
+    if (!w || !bf) return alert("Please fill in your stats");
 
     const { targetBF, proteinMultiplier } = getPhysiqueTargets(physiqueGoal);
     const tbf = targetBF / 100;
@@ -140,7 +171,10 @@ export default function Home() {
     if (goalSpeed === "aggressive") dailyDeficit = 700;
 
     const weeklyLossKg = (dailyDeficit * 7) / 7700;
-    const weeksToGoal = Math.max(1, Math.ceil((w - targetWeight) / weeklyLossKg));
+    const weeksToGoal = Math.max(
+      1,
+      Math.ceil((w - targetWeight) / weeklyLossKg)
+    );
 
     const trend = generateTrend(w, targetWeight, weeksToGoal);
 
@@ -157,11 +191,18 @@ export default function Home() {
     });
   };
 
+  // 🔥 Graph dragging
   const handleMouseDown = (e: any) => {
     const chart = chartRef.current;
     if (!chart) return;
 
-    const points = chart.getElementsAtEventForMode(e.nativeEvent, "nearest", { intersect: true }, false);
+    const points = chart.getElementsAtEventForMode(
+      e.nativeEvent,
+      "nearest",
+      { intersect: true },
+      false
+    );
+
     if (points.length > 0) setDraggingIndex(points[0].index);
   };
 
@@ -197,13 +238,20 @@ export default function Home() {
 
         <h1 className="text-5xl font-bold text-center">CutForecast</h1>
 
-        {/* Physique */}
+        {/* 🔥 Physique slider (placeholder visual for now) */}
         <div className="bg-zinc-900 p-6 rounded-xl text-center space-y-4">
           <h2 className="text-xl font-semibold">Your Goal Physique</h2>
 
           <PhysiqueFigure level={physiqueGoal / 100} />
 
-          <input type="range" min="0" max="100" value={physiqueGoal} onChange={(e) => setPhysiqueGoal(Number(e.target.value))} className="w-full" />
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={physiqueGoal}
+            onChange={(e) => setPhysiqueGoal(Number(e.target.value))}
+            className="w-full"
+          />
 
           <div className="flex justify-between text-sm text-zinc-400">
             <span>Skinny</span>
@@ -212,25 +260,50 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Inputs */}
+        {/* 🔥 Inputs */}
         <section className="grid md:grid-cols-2 gap-4">
 
           <div className="bg-zinc-900 p-4 rounded-xl space-y-3">
             <h2 className="text-xl font-semibold">Your Stats</h2>
 
-            <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="Enter your weight (kg)" className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400" />
+            <input
+              type="number"
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              placeholder="Enter your weight (kg)"
+              className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
+            />
 
-            <input type="number" value={bodyFat} onChange={(e) => setBodyFat(e.target.value)} placeholder="Enter body fat %" className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400" />
+            <input
+              type="number"
+              value={bodyFat}
+              onChange={(e) => setBodyFat(e.target.value)}
+              placeholder="Enter body fat %"
+              className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
+            />
 
-            <input type="number" value={trainingDays} onChange={(e) => setTrainingDays(e.target.value)} placeholder="Training days per week" className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400" />
+            <input
+              type="number"
+              value={trainingDays}
+              onChange={(e) => setTrainingDays(e.target.value)}
+              placeholder="Training days per week"
+              className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
+            />
 
-            <select value={goalSpeed} onChange={(e) => setGoalSpeed(e.target.value)} className="w-full p-3 bg-zinc-800 rounded">
+            <select
+              value={goalSpeed}
+              onChange={(e) => setGoalSpeed(e.target.value)}
+              className="w-full p-3 bg-zinc-800 rounded"
+            >
               <option value="slow">Slow</option>
               <option value="moderate">Moderate</option>
               <option value="aggressive">Aggressive</option>
             </select>
 
-            <button onClick={calculate} className="w-full py-3 bg-green-500 rounded font-bold text-black">
+            <button
+              onClick={calculate}
+              className="w-full py-3 bg-green-500 rounded font-bold text-black"
+            >
               Calculate
             </button>
           </div>
@@ -238,6 +311,7 @@ export default function Home() {
           {results && (
             <div className="bg-zinc-900 p-4 rounded-xl space-y-2">
               <h2 className="text-xl font-semibold">Your Plan</h2>
+
               <p>Calories: {results.suggestedCalories} kcal</p>
               <p>Protein: {results.proteinTarget}g/day</p>
               <p>Target Body Fat: {results.targetBF}%</p>
@@ -246,10 +320,14 @@ export default function Home() {
           )}
         </section>
 
-        {/* Graph */}
+        {/* 🔥 Graph */}
         {results && (
           <div className="bg-white text-black p-6 rounded-xl w-full">
-            <div onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
+            <div
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+            >
               <Line
                 ref={chartRef}
                 data={{
@@ -270,7 +348,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* SEO CONTENT */}
+        {/* 🔥 SEO CONTENT */}
         <div className="text-zinc-400 text-sm space-y-6 max-w-3xl mx-auto">
 
           <div>
@@ -297,7 +375,7 @@ export default function Home() {
 
         </div>
 
-        {/* Footer */}
+        {/* 🔥 Footer */}
         <div className="text-center text-xs text-zinc-500 mt-10">
           <a href="/privacy" className="mr-4">Privacy Policy</a>
           <a href="/terms">Terms of Service</a>
