@@ -280,6 +280,10 @@ const handleMouseMove = (e: any) => {
         </div>
 
       </div>
+      <div className="text-center text-xs text-zinc-500 mt-10">
+      <a href="/privacy" className="mr-4">Privacy Policy</a>
+      <a href="/terms">Terms of Service</a>
+      </div>
     </main>
   );
 }
