@@ -37,49 +37,6 @@ const generateTrend = (current: number, target: number, weeks: number) => {
   return arr;
 };
 
-const getPhysiqueTargets = (value: number) => {
-  const targetBF = 20 - value * 0.1;
-  const proteinMultiplier = 2 + value * 0.006;
-  return { targetBF, proteinMultiplier };
-};
-const PhysiqueFigure = ({ level }: { level: number }) => {
-  const intensity = level; // 0 → 1
-
-  return (
-    <div className="flex justify-center">
-      <div style={{ width: 220, position: "relative" }}>
-
-        {/* Base image */}
-        <img
-          src="/muscle.jpg"
-          alt="Muscle anatomy"
-          style={{
-            width: "100%",
-            borderRadius: "12px",
-            filter: `
-              brightness(${0.8 + intensity * 0.4})
-              contrast(${0.9 + intensity * 0.6})
-              saturate(${0.8 + intensity * 0.3})
-            `,
-          }}
-        />
-
-        {/* Fade overlay for "less muscular" */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: "#000",
-            opacity: 0.5 - intensity * 0.5,
-            borderRadius: "12px",
-            pointerEvents: "none",
-          }}
-        />
-
-      </div>
-    </div>
-  );
-};
 export default function Home() {
   const chartRef = useRef<any>(null);
 
@@ -87,10 +44,12 @@ export default function Home() {
   const [bodyFat, setBodyFat] = useState("");
   const [trainingDays, setTrainingDays] = useState("");
   const [goalSpeed, setGoalSpeed] = useState("moderate");
-  const [physiqueGoal, setPhysiqueGoal] = useState(50);
 
   const [results, setResults] = useState<ResultsType | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+
+  // 🔥 Default empty graph
+  const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
 
   const calculate = () => {
     const w = Number(weight);
@@ -98,7 +57,7 @@ export default function Home() {
 
     if (!w || !bf) return alert("Please fill in your stats");
 
-    const { targetBF, proteinMultiplier } = getPhysiqueTargets(physiqueGoal);
+    const targetBF = 12;
     const tbf = targetBF / 100;
 
     const LBM = w * (1 - bf);
@@ -125,7 +84,7 @@ export default function Home() {
 
     const trend = generateTrend(w, targetWeight, weeksToGoal);
 
-    const proteinTarget = Math.round(LBM * proteinMultiplier);
+    const proteinTarget = Math.round(LBM * 2.2);
     const suggestedCalories = Math.round(TDEE - dailyDeficit);
 
     setResults({
@@ -134,11 +93,11 @@ export default function Home() {
       trend,
       proteinTarget,
       suggestedCalories,
-      targetBF: Math.round(targetBF),
+      targetBF,
     });
   };
 
-  // 🔥 Graph dragging
+  // 🔥 Dragging logic
   const handleMouseDown = (e: any) => {
     const chart = chartRef.current;
     if (!chart) return;
@@ -185,31 +144,9 @@ export default function Home() {
 
         <h1 className="text-5xl font-bold text-center">CutForecast</h1>
 
-        {/* 🔥 Physique slider (placeholder visual for now) */}
-        <div className="bg-zinc-900 p-6 rounded-xl text-center space-y-4">
-          <h2 className="text-xl font-semibold">Your Goal Physique</h2>
-
-          <PhysiqueFigure level={physiqueGoal / 100} />
-
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={physiqueGoal}
-            onChange={(e) => setPhysiqueGoal(Number(e.target.value))}
-            className="w-full"
-          />
-
-          <div className="flex justify-between text-sm text-zinc-400">
-            <span>Skinny</span>
-            <span>Athletic</span>
-            <span>Muscular</span>
-          </div>
-        </div>
-
-        {/* 🔥 Inputs */}
         <section className="grid md:grid-cols-2 gap-4">
 
+          {/* 🔥 INPUTS */}
           <div className="bg-zinc-900 p-4 rounded-xl space-y-3">
             <h2 className="text-xl font-semibold">Your Stats</h2>
 
@@ -255,74 +192,63 @@ export default function Home() {
             </button>
           </div>
 
-          {results && (
-            <div className="bg-zinc-900 p-4 rounded-xl space-y-2">
-              <h2 className="text-xl font-semibold">Your Plan</h2>
+          {/* 🔥 PLAN (always visible) */}
+          <div className="bg-zinc-900 p-4 rounded-xl space-y-2">
+            <h2 className="text-xl font-semibold">Your Plan</h2>
 
-              <p>Calories: {results.suggestedCalories} kcal</p>
-              <p>Protein: {results.proteinTarget}g/day</p>
-              <p>Target Body Fat: {results.targetBF}%</p>
-              <p>Time to Goal: {results.weeksToGoal} weeks</p>
-            </div>
-          )}
+            <p>Calories: {results ? results.suggestedCalories : "--"} kcal</p>
+            <p>Protein: {results ? results.proteinTarget : "--"} g/day</p>
+            <p>Target Body Fat: {results ? results.targetBF : "--"}%</p>
+            <p>Time to Goal: {results ? results.weeksToGoal : "--"} weeks</p>
+          </div>
         </section>
 
-        {/* 🔥 Graph */}
-        {results && (
-          <div className="bg-white text-black p-6 rounded-xl w-full">
-            <div
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-            >
-              <Line
-                ref={chartRef}
-                data={{
-                  labels: results.trend.map((_, i) =>
-                    dayjs().add(i, "week").format("MMM D")
-                  ),
-                  datasets: [
-                    {
-                      label: "Weight",
-                      data: results.trend,
-                      borderColor: "red",
-                      tension: 0.4,
-                    },
-                  ],
-                }}
-              />
-            </div>
+        {/* 🔥 GRAPH (always visible) */}
+        <div className="bg-white text-black p-6 rounded-xl w-full">
+          <div
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+          >
+            <Line
+              ref={chartRef}
+              data={{
+                labels: (results?.trend || emptyTrend).map((_, i) =>
+                  dayjs().add(i, "week").format("MMM D")
+                ),
+                datasets: [
+                  {
+                    label: "Weight",
+                    data: results?.trend || emptyTrend,
+                    borderColor: "red",
+                    tension: 0.4,
+                  },
+                ],
+              }}
+            />
           </div>
-        )}
+        </div>
 
-        {/* 🔥 SEO CONTENT */}
+        {/* 🔥 SEO */}
         <div className="text-zinc-400 text-sm space-y-6 max-w-3xl mx-auto">
 
           <div>
             <h2 className="text-white text-lg font-semibold">What is CutForecast?</h2>
             <p>
               CutForecast is a free fat loss calculator that helps you plan your weight loss journey.
-              It estimates your calorie needs and predicts how your weight will change over time.
             </p>
           </div>
 
           <div>
             <h2 className="text-white text-lg font-semibold">How many calories should I eat?</h2>
             <p>
-              Most people need a calorie deficit of 300–700 kcal per day to lose fat effectively.
-            </p>
-          </div>
-
-          <div>
-            <h2 className="text-white text-lg font-semibold">Why does weight fluctuate?</h2>
-            <p>
-              Daily changes are normal due to water, food intake, and glycogen levels.
+              Most people need a calorie deficit of 300–700 kcal per day.
             </p>
           </div>
 
         </div>
 
-        {/* 🔥 Footer */}
+        {/* 🔥 FOOTER */}
         <div className="text-center text-xs text-zinc-500 mt-10">
           <a href="/privacy" className="mr-4">Privacy Policy</a>
           <a href="/terms">Terms of Service</a>
