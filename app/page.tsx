@@ -33,6 +33,8 @@ type ResultsType = {
   suggestedCalories: number;
   TDEE: number;
   weeklyLossKg: string;
+  progressStatus: string;
+  targetBF: number;
 };
 
 const generateTrend = (
@@ -54,14 +56,26 @@ const generateTrend = (
   return arr;
 };
 
+const getPhysiqueTargets = (value: number) => {
+  let targetBF = 15;
+
+  if (value < 33) targetBF = 18;
+  else if (value < 66) targetBF = 14;
+  else targetBF = 10;
+
+  const proteinMultiplier = 2 + (value / 100) * 0.6;
+
+  return { targetBF, proteinMultiplier };
+};
+
 export default function Home() {
   const chartRef = useRef<any>(null);
 
   const [weight, setWeight] = useState<number>(83.5);
   const [bodyFat, setBodyFat] = useState<number>(17);
-  const [targetBodyFat, setTargetBodyFat] = useState<number>(12);
   const [trainingDays, setTrainingDays] = useState<number>(3);
   const [goalSpeed, setGoalSpeed] = useState<string>("moderate");
+  const [physiqueGoal, setPhysiqueGoal] = useState<number>(50);
 
   const [manualLBM, setManualLBM] = useState<string>("");
   const [manualTargetWeight, setManualTargetWeight] = useState<string>("");
@@ -72,9 +86,11 @@ export default function Home() {
   const calculate = () => {
     const w = Number(weight);
     const bf = Number(bodyFat) / 100;
-    const tbf = Number(targetBodyFat) / 100;
 
-    if (!w || !bf || !tbf) return alert("Fill all fields");
+    const { targetBF, proteinMultiplier } = getPhysiqueTargets(physiqueGoal);
+    const tbf = targetBF / 100;
+
+    if (!w || !bf) return alert("Fill all fields");
 
     const LBM = manualLBM ? Number(manualLBM) : w * (1 - bf);
     const targetWeight = manualTargetWeight
@@ -96,14 +112,20 @@ export default function Home() {
     if (goalSpeed === "aggressive") dailyDeficit = 700;
 
     const weeklyLossKg = (dailyDeficit * 7) / 7700;
-
     const fatToLose = w - targetWeight;
     const weeksToGoal = Math.max(1, Math.ceil(fatToLose / weeklyLossKg));
 
     const trend = generateTrend(w, targetWeight, weeksToGoal);
 
-    const proteinTarget = Math.round(LBM * 2.2);
+    const proteinTarget = Math.round(LBM * proteinMultiplier);
     const suggestedCalories = Math.round(TDEE - dailyDeficit);
+
+    const expectedNow = trend[0];
+    let progressStatus = "On track";
+
+    if (w < expectedNow - 0.3) progressStatus = "Ahead of schedule 🔥";
+    else if (w > expectedNow + 0.3)
+      progressStatus = "Behind schedule ⚠️";
 
     setResults({
       LBM: LBM.toFixed(1),
@@ -114,6 +136,8 @@ export default function Home() {
       suggestedCalories,
       TDEE: Math.round(TDEE),
       weeklyLossKg: weeklyLossKg.toFixed(2),
+      progressStatus,
+      targetBF,
     });
   };
 
@@ -128,49 +152,36 @@ export default function Home() {
       false
     );
 
-    if (points.length > 0) {
-      setDraggingIndex(points[0].index);
-    }
+    if (points.length > 0) setDraggingIndex(points[0].index);
   };
-const handleMouseMove = (e: any) => {
-  if (draggingIndex === null || !results) return;
 
-  const chart = chartRef.current;
-  const yAxis = chart.scales.y;
+  const handleMouseMove = (e: any) => {
+    if (draggingIndex === null || !results) return;
 
-  let newValue = yAxis.getValueForPixel(e.nativeEvent.offsetY);
-  newValue = Math.max(60, Math.min(120, newValue));
+    const chart = chartRef.current;
+    const yAxis = chart.scales.y;
 
-  let updatedTrend = [...results.trend];
+    let newValue = yAxis.getValueForPixel(e.nativeEvent.offsetY);
+    newValue = Math.max(60, Math.min(120, newValue));
 
-  // update dragged point
-  updatedTrend[draggingIndex] = parseFloat(newValue.toFixed(1));
+    let updatedTrend = [...results.trend];
+    updatedTrend[draggingIndex] = parseFloat(newValue.toFixed(1));
 
-  const targetWeight = Number(results.targetWeight);
-  const remainingPoints = updatedTrend.length - draggingIndex - 1;
-
-  // 🔥 recalculate future trend
-  if (remainingPoints > 0) {
-    let current = updatedTrend[draggingIndex];
+    const targetWeight = Number(results.targetWeight);
 
     for (let i = draggingIndex + 1; i < updatedTrend.length; i++) {
       const stepsLeft = updatedTrend.length - i;
-      const step = (current - targetWeight) / stepsLeft;
+      const current = updatedTrend[i - 1];
 
+      const step = (current - targetWeight) / stepsLeft;
       const fluct = (Math.random() - 0.5) * 0.3;
 
       const next = current - step + fluct;
-
       updatedTrend[i] = parseFloat(next.toFixed(1));
-      current = next;
     }
-  }
 
-  setResults({
-    ...results,
-    trend: updatedTrend,
-  });
-};
+    setResults({ ...results, trend: updatedTrend });
+  };
 
   const handleMouseUp = () => setDraggingIndex(null);
 
@@ -181,9 +192,28 @@ const handleMouseMove = (e: any) => {
         <h1 className="text-5xl font-bold text-center">CutForecast</h1>
 
         <p className="text-center text-zinc-400 max-w-2xl mx-auto">
-          Plan your fat loss visually. Calculate your calories, track your progress,
-          and see how your weight will change over time.
+          Plan your fat loss visually. Calculate calories, track progress, and forecast your results.
         </p>
+
+        {/* Physique Slider */}
+        <div className="bg-zinc-900 p-4 rounded-xl space-y-4">
+          <h2 className="text-xl font-semibold">Your Goal Physique</h2>
+
+          <input
+            type="range"
+            min="0"
+            max="100"
+            value={physiqueGoal}
+            onChange={(e) => setPhysiqueGoal(Number(e.target.value))}
+            className="w-full"
+          />
+
+          <div className="flex justify-between text-sm text-zinc-400">
+            <span>Skinny</span>
+            <span>Athletic</span>
+            <span>Muscular</span>
+          </div>
+        </div>
 
         <section className="grid md:grid-cols-2 gap-4">
 
@@ -192,7 +222,6 @@ const handleMouseMove = (e: any) => {
 
             <input type="number" value={weight} onChange={(e) => setWeight(Number(e.target.value))} placeholder="Weight (kg)" className="w-full p-3 bg-zinc-800 rounded" />
             <input type="number" value={bodyFat} onChange={(e) => setBodyFat(Number(e.target.value))} placeholder="Body Fat %" className="w-full p-3 bg-zinc-800 rounded" />
-            <input type="number" value={targetBodyFat} onChange={(e) => setTargetBodyFat(Number(e.target.value))} placeholder="Target Body Fat %" className="w-full p-3 bg-zinc-800 rounded" />
 
             <input type="number" value={trainingDays} onChange={(e) => setTrainingDays(Number(e.target.value))} placeholder="Training days/week" className="w-full p-3 bg-zinc-800 rounded" />
 
@@ -201,9 +230,6 @@ const handleMouseMove = (e: any) => {
               <option value="moderate">Moderate</option>
               <option value="aggressive">Aggressive</option>
             </select>
-
-            <input type="number" value={manualLBM} onChange={(e) => setManualLBM(e.target.value)} placeholder="Override LBM" className="w-full p-3 bg-zinc-800 rounded" />
-            <input type="number" value={manualTargetWeight} onChange={(e) => setManualTargetWeight(e.target.value)} placeholder="Override Target Weight" className="w-full p-3 bg-zinc-800 rounded" />
 
             <button onClick={calculate} className="w-full py-3 bg-green-500 rounded font-bold text-black">
               Calculate
@@ -214,14 +240,13 @@ const handleMouseMove = (e: any) => {
             <div className="bg-zinc-900 p-4 rounded-xl space-y-2">
               <h2 className="text-xl font-semibold">Your Plan</h2>
 
+              <p>{results.progressStatus}</p>
               <p>Calories: {results.suggestedCalories} kcal</p>
               <p>Protein: {results.proteinTarget}g/day</p>
-              <p>TDEE: {results.TDEE} kcal</p>
+              <p>Target Body Fat: {results.targetBF}%</p>
 
               <p>Weekly Loss: {results.weeklyLossKg} kg/week</p>
               <p>Time to Goal: {results.weeksToGoal} weeks</p>
-
-              <p>Target Weight: {results.targetWeight} kg</p>
             </div>
           )}
         </section>
@@ -253,6 +278,7 @@ const handleMouseMove = (e: any) => {
           </div>
         )}
 
+        {/* SEO CONTENT */}
         <div className="text-zinc-400 text-sm space-y-6 max-w-3xl mx-auto">
 
           <div>
@@ -280,13 +306,6 @@ const handleMouseMove = (e: any) => {
         </div>
 
       </div>
-      <div className="text-center text-xs text-zinc-500 mt-10">
-      <a href="/privacy" className="mr-4">Privacy Policy</a>
-      <a href="/terms">Terms of Service</a>
-      </div>
     </main>
   );
 }
-
-
-
