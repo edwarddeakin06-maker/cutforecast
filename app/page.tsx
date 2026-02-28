@@ -56,29 +56,53 @@ const generateTrend = (
   return arr;
 };
 
+// 🔥 Smooth physique mapping
 const getPhysiqueTargets = (value: number) => {
-  let targetBF = 15;
-
-  if (value < 33) targetBF = 18;
-  else if (value < 66) targetBF = 14;
-  else targetBF = 10;
-
-  const proteinMultiplier = 2 + (value / 100) * 0.6;
-
+  const targetBF = 20 - value * 0.1; // 20% → 10%
+  const proteinMultiplier = 2 + value * 0.006;
   return { targetBF, proteinMultiplier };
+};
+
+// 🔥 Smooth animated body
+const PhysiqueFigure = ({ level }: { level: number }) => {
+  const shoulder = 35 + level * 35;
+  const waist = 28 - level * 8;
+  const chest = 20 + level * 10;
+  const arms = 3 + level * 4;
+  const legs = 10 + level * 6;
+
+  return (
+    <svg width="140" height="220" viewBox="0 0 140 220" className="mx-auto transition-all duration-500">
+      <circle cx="70" cy="25" r="11" fill="white" />
+
+      <path
+        d={`
+          M ${70 - shoulder / 2} 55
+          Q 70 ${55 + chest}, ${70 + shoulder / 2} 55
+          L ${70 + waist / 2} 120
+          Q 70 ${120 + chest / 2}, ${70 - waist / 2} 120
+          Z
+        `}
+        fill="white"
+      />
+
+      <line x1={70 - shoulder / 2 - 5} y1="70" x2={70 - shoulder / 2 - 20} y2="110" stroke="white" strokeWidth={arms} />
+      <line x1={70 + shoulder / 2 + 5} y1="70" x2={70 + shoulder / 2 + 20} y2="110" stroke="white" strokeWidth={arms} />
+
+      <line x1={70 - legs} y1="120" x2={60 - legs} y2="200" stroke="white" strokeWidth="5" />
+      <line x1={70 + legs} y1="120" x2={80 + legs} y2="200" stroke="white" strokeWidth="5" />
+    </svg>
+  );
 };
 
 export default function Home() {
   const chartRef = useRef<any>(null);
 
-  const [weight, setWeight] = useState<number>(83.5);
-  const [bodyFat, setBodyFat] = useState<number>(17);
-  const [trainingDays, setTrainingDays] = useState<number>(3);
-  const [goalSpeed, setGoalSpeed] = useState<string>("moderate");
-  const [physiqueGoal, setPhysiqueGoal] = useState<number>(50);
-
-  const [manualLBM, setManualLBM] = useState<string>("");
-  const [manualTargetWeight, setManualTargetWeight] = useState<string>("");
+  const [weight, setWeight] = useState(83.5);
+  const [bodyFat, setBodyFat] = useState(17);
+  const [trainingDays, setTrainingDays] = useState(3);
+  const [goalSpeed, setGoalSpeed] = useState("moderate");
+  const [physiqueGoal, setPhysiqueGoal] = useState(50);
 
   const [results, setResults] = useState<ResultsType | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
@@ -90,18 +114,13 @@ export default function Home() {
     const { targetBF, proteinMultiplier } = getPhysiqueTargets(physiqueGoal);
     const tbf = targetBF / 100;
 
-    if (!w || !bf) return alert("Fill all fields");
-
-    const LBM = manualLBM ? Number(manualLBM) : w * (1 - bf);
-    const targetWeight = manualTargetWeight
-      ? Number(manualTargetWeight)
-      : LBM / (1 - tbf);
+    const LBM = w * (1 - bf);
+    const targetWeight = LBM / (1 - tbf);
 
     const BMR = 370 + 21.6 * LBM;
 
     let activityMultiplier = 1.2;
-    if (trainingDays <= 1) activityMultiplier = 1.2;
-    else if (trainingDays <= 3) activityMultiplier = 1.375;
+    if (trainingDays <= 3) activityMultiplier = 1.375;
     else if (trainingDays <= 5) activityMultiplier = 1.55;
     else activityMultiplier = 1.725;
 
@@ -112,8 +131,7 @@ export default function Home() {
     if (goalSpeed === "aggressive") dailyDeficit = 700;
 
     const weeklyLossKg = (dailyDeficit * 7) / 7700;
-    const fatToLose = w - targetWeight;
-    const weeksToGoal = Math.max(1, Math.ceil(fatToLose / weeklyLossKg));
+    const weeksToGoal = Math.max(1, Math.ceil((w - targetWeight) / weeklyLossKg));
 
     const trend = generateTrend(w, targetWeight, weeksToGoal);
 
@@ -124,8 +142,7 @@ export default function Home() {
     let progressStatus = "On track";
 
     if (w < expectedNow - 0.3) progressStatus = "Ahead of schedule 🔥";
-    else if (w > expectedNow + 0.3)
-      progressStatus = "Behind schedule ⚠️";
+    else if (w > expectedNow + 0.3) progressStatus = "Behind schedule ⚠️";
 
     setResults({
       LBM: LBM.toFixed(1),
@@ -137,7 +154,7 @@ export default function Home() {
       TDEE: Math.round(TDEE),
       weeklyLossKg: weeklyLossKg.toFixed(2),
       progressStatus,
-      targetBF,
+      targetBF: Math.round(targetBF),
     });
   };
 
@@ -191,13 +208,11 @@ export default function Home() {
 
         <h1 className="text-5xl font-bold text-center">CutForecast</h1>
 
-        <p className="text-center text-zinc-400 max-w-2xl mx-auto">
-          Plan your fat loss visually. Calculate calories, track progress, and forecast your results.
-        </p>
-
-        {/* Physique Slider */}
-        <div className="bg-zinc-900 p-4 rounded-xl space-y-4">
+        {/* 🔥 Physique Section */}
+        <div className="bg-zinc-900 p-6 rounded-xl text-center space-y-4">
           <h2 className="text-xl font-semibold">Your Goal Physique</h2>
+
+          <PhysiqueFigure level={physiqueGoal / 100} />
 
           <input
             type="range"
@@ -220,10 +235,10 @@ export default function Home() {
           <div className="bg-zinc-900 p-4 rounded-xl space-y-3">
             <h2 className="text-xl font-semibold">Your Stats</h2>
 
-            <input type="number" value={weight} onChange={(e) => setWeight(Number(e.target.value))} placeholder="Weight (kg)" className="w-full p-3 bg-zinc-800 rounded" />
-            <input type="number" value={bodyFat} onChange={(e) => setBodyFat(Number(e.target.value))} placeholder="Body Fat %" className="w-full p-3 bg-zinc-800 rounded" />
+            <input type="number" value={weight} onChange={(e) => setWeight(Number(e.target.value))} className="w-full p-3 bg-zinc-800 rounded" />
+            <input type="number" value={bodyFat} onChange={(e) => setBodyFat(Number(e.target.value))} className="w-full p-3 bg-zinc-800 rounded" />
 
-            <input type="number" value={trainingDays} onChange={(e) => setTrainingDays(Number(e.target.value))} placeholder="Training days/week" className="w-full p-3 bg-zinc-800 rounded" />
+            <input type="number" value={trainingDays} onChange={(e) => setTrainingDays(Number(e.target.value))} className="w-full p-3 bg-zinc-800 rounded" />
 
             <select value={goalSpeed} onChange={(e) => setGoalSpeed(e.target.value)} className="w-full p-3 bg-zinc-800 rounded">
               <option value="slow">Slow</option>
@@ -244,8 +259,6 @@ export default function Home() {
               <p>Calories: {results.suggestedCalories} kcal</p>
               <p>Protein: {results.proteinTarget}g/day</p>
               <p>Target Body Fat: {results.targetBF}%</p>
-
-              <p>Weekly Loss: {results.weeklyLossKg} kg/week</p>
               <p>Time to Goal: {results.weeksToGoal} weeks</p>
             </div>
           )}
@@ -253,11 +266,7 @@ export default function Home() {
 
         {results && (
           <div className="bg-white text-black p-6 rounded-xl">
-            <div
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-            >
+            <div onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
               <Line
                 ref={chartRef}
                 data={{
@@ -278,7 +287,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* SEO CONTENT */}
+        {/* 🔥 SEO CONTENT BACK */}
         <div className="text-zinc-400 text-sm space-y-6 max-w-3xl mx-auto">
 
           <div>
