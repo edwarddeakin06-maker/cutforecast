@@ -43,105 +43,40 @@ const getPhysiqueTargets = (value: number) => {
   return { targetBF, proteinMultiplier };
 };
 const PhysiqueFigure = ({ level }: { level: number }) => {
-  const t = level;
-  const muscleOpacity = 0.3 + t * 0.7;
+  const intensity = level; // 0 → 1
 
   return (
     <div className="flex justify-center">
-      <svg width="220" height="320" viewBox="0 0 200 300">
+      <div style={{ width: 220, position: "relative" }}>
 
-        {/* Head */}
-        <ellipse cx="100" cy="25" rx="12" ry="16" fill="#d1d5db" />
-
-        {/* Neck */}
-        <path d="M92 40 L108 40 L105 55 L95 55 Z" fill="#d1d5db" />
-
-        {/* BODY BASE */}
-        <path
-          d="
-          M70 65
-          Q100 50 130 65
-          Q135 90 130 120
-          L125 160
-          Q100 180 75 160
-          L70 120
-          Q65 90 70 65
-          Z
-          "
-          fill="#e5e7eb"
+        {/* Base image */}
+        <img
+          src="/muscle.jpg"
+          alt="Muscle anatomy"
+          style={{
+            width: "100%",
+            borderRadius: "12px",
+            filter: `
+              brightness(${0.8 + intensity * 0.4})
+              contrast(${0.9 + intensity * 0.6})
+              saturate(${0.8 + intensity * 0.3})
+            `,
+          }}
         />
 
-        {/* ARMS */}
-        <path d="M70 70 Q55 110 70 150" stroke="#e5e7eb" strokeWidth="14" />
-        <path d="M130 70 Q145 110 130 150" stroke="#e5e7eb" strokeWidth="14" />
+        {/* Fade overlay for "less muscular" */}
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "#000",
+            opacity: 0.5 - intensity * 0.5,
+            borderRadius: "12px",
+            pointerEvents: "none",
+          }}
+        />
 
-        {/* FOREARMS */}
-        <path d="M70 150 Q75 200 80 250" stroke="#e5e7eb" strokeWidth="10" />
-        <path d="M130 150 Q125 200 120 250" stroke="#e5e7eb" strokeWidth="10" />
-
-        {/* LEGS */}
-        <path d="M85 170 Q80 210 85 260" stroke="#e5e7eb" strokeWidth="14" />
-        <path d="M115 170 Q120 210 115 260" stroke="#e5e7eb" strokeWidth="14" />
-
-        {/* 🔥 MUSCLE ANATOMY (ACTUAL STRUCTURE) */}
-        <g opacity={muscleOpacity} stroke="#9ca3af" strokeWidth="1.2" fill="none">
-
-          {/* Trapezius */}
-          <path d="M85 65 L100 50 L115 65" />
-
-          {/* Clavicle */}
-          <path d="M75 75 Q100 70 125 75" />
-
-          {/* Pectorals */}
-          <path d="M75 90 Q100 80 125 90" />
-          <line x1="100" y1="85" x2="100" y2="110" />
-
-          {/* Serratus */}
-          <path d="M78 110 L88 120" />
-          <path d="M78 120 L88 130" />
-          <path d="M122 110 L112 120" />
-          <path d="M122 120 L112 130" />
-
-          {/* Abs */}
-          <line x1="90" y1="110" x2="110" y2="110" />
-          <line x1="90" y1="125" x2="110" y2="125" />
-          <line x1="90" y1="140" x2="110" y2="140" />
-          <line x1="100" y1="105" x2="100" y2="155" />
-
-          {/* Obliques */}
-          <path d="M80 115 L90 155" />
-          <path d="M120 115 L110 155" />
-
-          {/* Deltoids */}
-          <path d="M65 80 Q75 95 80 90" />
-          <path d="M135 80 Q125 95 120 90" />
-
-          {/* Biceps */}
-          <path d="M60 105 Q70 120 70 135" />
-          <path d="M140 105 Q130 120 130 135" />
-
-          {/* Triceps */}
-          <path d="M60 115 Q65 130 70 145" />
-          <path d="M140 115 Q135 130 130 145" />
-
-          {/* Forearms */}
-          <path d="M70 150 Q75 180 78 210" />
-          <path d="M130 150 Q125 180 122 210" />
-
-          {/* Groin */}
-          <path d="M90 165 Q100 175 110 165" />
-
-          {/* Quads */}
-          <path d="M85 180 Q80 220 85 250" />
-          <path d="M115 180 Q120 220 115 250" />
-
-          {/* Calves */}
-          <path d="M85 230 Q90 250 95 265" />
-          <path d="M115 230 Q110 250 105 265" />
-
-        </g>
-
-      </svg>
+      </div>
     </div>
   );
 };
