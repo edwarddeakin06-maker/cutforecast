@@ -32,7 +32,12 @@ const getMilestone = (bf: number) => {
   return "Cutting...";
 };
 
-const generateTrend = (current, target, weeks, simulate) => {
+const generateTrend = (
+  current: number,
+  target: number,
+  weeks: number,
+  simulate: boolean
+) => {
   const arr = [];
   let w = current;
   const loss = (current - target) / weeks;
