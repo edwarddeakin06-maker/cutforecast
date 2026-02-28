@@ -44,91 +44,100 @@ const getPhysiqueTargets = (value: number) => {
 };
 const PhysiqueFigure = ({ level }: { level: number }) => {
   const t = level;
-
-  // subtle scaling (NOT distortion)
-  const scale = 0.95 + t * 0.1;
   const muscleOpacity = 0.3 + t * 0.7;
 
   return (
     <div className="flex justify-center">
-      <svg
-        width="220"
-        height="320"
-        viewBox="0 0 200 300"
-        style={{ transform: `scale(${scale})` }}
-      >
+      <svg width="220" height="320" viewBox="0 0 200 300">
 
         {/* Head */}
-        <ellipse cx="100" cy="28" rx="14" ry="18" fill="#d1d5db" />
+        <ellipse cx="100" cy="25" rx="12" ry="16" fill="#d1d5db" />
 
         {/* Neck */}
-        <rect x="92" y="45" width="16" height="10" fill="#d1d5db" />
+        <path d="M92 40 L108 40 L105 55 L95 55 Z" fill="#d1d5db" />
 
-        {/* Torso */}
+        {/* BODY BASE */}
         <path
           d="
-            M70 70
-            Q100 55 130 70
-            L120 160
-            Q100 175 80 160
-            Z
+          M70 65
+          Q100 50 130 65
+          Q135 90 130 120
+          L125 160
+          Q100 180 75 160
+          L70 120
+          Q65 90 70 65
+          Z
           "
           fill="#e5e7eb"
         />
 
-        {/* Shoulders */}
-        <ellipse cx="70" cy="75" rx="12" ry="8" fill="#e5e7eb" />
-        <ellipse cx="130" cy="75" rx="12" ry="8" fill="#e5e7eb" />
+        {/* ARMS */}
+        <path d="M70 70 Q55 110 70 150" stroke="#e5e7eb" strokeWidth="14" />
+        <path d="M130 70 Q145 110 130 150" stroke="#e5e7eb" strokeWidth="14" />
 
-        {/* Arms */}
-        <path d="M60 80 Q50 120 65 160" stroke="#e5e7eb" strokeWidth="14" fill="none" />
-        <path d="M140 80 Q150 120 135 160" stroke="#e5e7eb" strokeWidth="14" fill="none" />
+        {/* FOREARMS */}
+        <path d="M70 150 Q75 200 80 250" stroke="#e5e7eb" strokeWidth="10" />
+        <path d="M130 150 Q125 200 120 250" stroke="#e5e7eb" strokeWidth="10" />
 
-        {/* Forearms */}
-        <path d="M65 160 Q70 200 75 240" stroke="#e5e7eb" strokeWidth="10" />
-        <path d="M135 160 Q130 200 125 240" stroke="#e5e7eb" strokeWidth="10" />
+        {/* LEGS */}
+        <path d="M85 170 Q80 210 85 260" stroke="#e5e7eb" strokeWidth="14" />
+        <path d="M115 170 Q120 210 115 260" stroke="#e5e7eb" strokeWidth="14" />
 
-        {/* Legs */}
-        <ellipse cx="85" cy="210" rx="14" ry="38" fill="#e5e7eb" />
-        <ellipse cx="115" cy="210" rx="14" ry="38" fill="#e5e7eb" />
-
-        {/* Calves */}
-        <ellipse cx="85" cy="260" rx="10" ry="25" fill="#e5e7eb" />
-        <ellipse cx="115" cy="260" rx="10" ry="25" fill="#e5e7eb" />
-
-        {/* 🔥 Muscle lines */}
+        {/* 🔥 MUSCLE ANATOMY (ACTUAL STRUCTURE) */}
         <g opacity={muscleOpacity} stroke="#9ca3af" strokeWidth="1.2" fill="none">
 
-          {/* Traps */}
-          <path d="M85 65 L100 55 L115 65" />
+          {/* Trapezius */}
+          <path d="M85 65 L100 50 L115 65" />
 
-          {/* Chest */}
+          {/* Clavicle */}
+          <path d="M75 75 Q100 70 125 75" />
+
+          {/* Pectorals */}
           <path d="M75 90 Q100 80 125 90" />
-          <line x1="100" y1="85" x2="100" y2="120" />
+          <line x1="100" y1="85" x2="100" y2="110" />
+
+          {/* Serratus */}
+          <path d="M78 110 L88 120" />
+          <path d="M78 120 L88 130" />
+          <path d="M122 110 L112 120" />
+          <path d="M122 120 L112 130" />
 
           {/* Abs */}
-          <line x1="90" y1="105" x2="110" y2="105" />
-          <line x1="90" y1="120" x2="110" y2="120" />
-          <line x1="90" y1="135" x2="110" y2="135" />
+          <line x1="90" y1="110" x2="110" y2="110" />
+          <line x1="90" y1="125" x2="110" y2="125" />
+          <line x1="90" y1="140" x2="110" y2="140" />
+          <line x1="100" y1="105" x2="100" y2="155" />
 
           {/* Obliques */}
-          <path d="M80 110 L90 145" />
-          <path d="M120 110 L110 145" />
+          <path d="M80 115 L90 155" />
+          <path d="M120 115 L110 155" />
 
-          {/* Arms */}
-          <path d="M60 110 Q65 130 70 150" />
-          <path d="M140 110 Q135 130 130 150" />
+          {/* Deltoids */}
+          <path d="M65 80 Q75 95 80 90" />
+          <path d="M135 80 Q125 95 120 90" />
 
-          {/* Quads */}
-          <line x1="80" y1="190" x2="75" y2="240" />
-          <line x1="120" y1="190" x2="125" y2="240" />
+          {/* Biceps */}
+          <path d="M60 105 Q70 120 70 135" />
+          <path d="M140 105 Q130 120 130 135" />
 
-          {/* Calves */}
-          <line x1="75" y1="240" x2="80" y2="275" />
-          <line x1="125" y1="240" x2="120" y2="275" />
+          {/* Triceps */}
+          <path d="M60 115 Q65 130 70 145" />
+          <path d="M140 115 Q135 130 130 145" />
+
+          {/* Forearms */}
+          <path d="M70 150 Q75 180 78 210" />
+          <path d="M130 150 Q125 180 122 210" />
 
           {/* Groin */}
           <path d="M90 165 Q100 175 110 165" />
+
+          {/* Quads */}
+          <path d="M85 180 Q80 220 85 250" />
+          <path d="M115 180 Q120 220 115 250" />
+
+          {/* Calves */}
+          <path d="M85 230 Q90 250 95 265" />
+          <path d="M115 230 Q110 250 105 265" />
 
         </g>
 
