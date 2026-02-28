@@ -14,9 +14,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "CutForecast - Fat Loss Calculator & Cut Planner",
+  title: "Cut Forecast Calculator - Plan Your Fat Loss",
   description:
-    "Plan your fat loss visually. Calculate calories, track your progress, and forecast your weight loss with CutForecast.",
+    "Free fat loss calculator. Calculate your calories, protein, and predict your weight loss over time with CutForecast.",
 };
 
 
