@@ -271,15 +271,17 @@ export default function Home() {
     </p>
   </div>
 
-</div>
-          <h2 className="text-white text-lg font-semibold">How this works</h2>
-          <p>
-            CutForecast estimates your calorie needs based on lean body mass and activity levels.
-            It predicts your fat loss and lets you adjust your journey visually.
-          </p>
-        </div>
+  <div>
+    <h2 className="text-white text-lg font-semibold">
+      How this works
+    </h2>
+    <p>
+      CutForecast estimates your calorie needs based on lean body mass and activity levels.
+      It predicts your fat loss and lets you adjust your journey visually.
+    </p>
+  </div>
 
-      </div>
+</div>
     </main>
   );
 }
