@@ -132,21 +132,45 @@ export default function Home() {
       setDraggingIndex(points[0].index);
     }
   };
+const handleMouseMove = (e: any) => {
+  if (draggingIndex === null || !results) return;
 
-  const handleMouseMove = (e: any) => {
-    if (draggingIndex === null || !results) return;
+  const chart = chartRef.current;
+  const yAxis = chart.scales.y;
 
-    const chart = chartRef.current;
-    const yAxis = chart.scales.y;
+  let newValue = yAxis.getValueForPixel(e.nativeEvent.offsetY);
+  newValue = Math.max(60, Math.min(120, newValue));
 
-    let newValue = yAxis.getValueForPixel(e.nativeEvent.offsetY);
-    newValue = Math.max(60, Math.min(120, newValue));
+  let updatedTrend = [...results.trend];
 
-    const updated = [...results.trend];
-    updated[draggingIndex] = parseFloat(newValue.toFixed(1));
+  // update dragged point
+  updatedTrend[draggingIndex] = parseFloat(newValue.toFixed(1));
 
-    setResults({ ...results, trend: updated });
-  };
+  const targetWeight = Number(results.targetWeight);
+  const remainingPoints = updatedTrend.length - draggingIndex - 1;
+
+  // 🔥 recalculate future trend
+  if (remainingPoints > 0) {
+    let current = updatedTrend[draggingIndex];
+
+    for (let i = draggingIndex + 1; i < updatedTrend.length; i++) {
+      const stepsLeft = updatedTrend.length - i;
+      const step = (current - targetWeight) / stepsLeft;
+
+      const fluct = (Math.random() - 0.5) * 0.3;
+
+      const next = current - step + fluct;
+
+      updatedTrend[i] = parseFloat(next.toFixed(1));
+      current = next;
+    }
+  }
+
+  setResults({
+    ...results,
+    trend: updatedTrend,
+  });
+};
 
   const handleMouseUp = () => setDraggingIndex(null);
 
