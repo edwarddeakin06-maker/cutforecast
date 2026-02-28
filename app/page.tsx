@@ -45,92 +45,95 @@ const getPhysiqueTargets = (value: number) => {
 const PhysiqueFigure = ({ level }: { level: number }) => {
   const t = level;
 
-  const shoulder = 50 + t * 40;
-  const waist = 32 - t * 10;
-  const chest = 25 + t * 15;
-  const armSize = 12 + t * 10;
-  const legSize = 16 + t * 10;
-
-  const muscle = 0.3 + t * 0.7;
+  // subtle scaling (NOT distortion)
+  const scale = 0.95 + t * 0.1;
+  const muscleOpacity = 0.3 + t * 0.7;
 
   return (
-    <svg width="220" height="300" viewBox="0 0 220 300" className="mx-auto">
+    <div className="flex justify-center">
+      <svg
+        width="220"
+        height="320"
+        viewBox="0 0 200 300"
+        style={{ transform: `scale(${scale})` }}
+      >
 
-      {/* Head */}
-      <ellipse cx="110" cy="30" rx="18" ry="22" fill="#d4d4d4" />
+        {/* Head */}
+        <ellipse cx="100" cy="28" rx="14" ry="18" fill="#d1d5db" />
 
-      {/* Neck */}
-      <rect x="100" y="50" width="20" height="15" fill="#d4d4d4" />
+        {/* Neck */}
+        <rect x="92" y="45" width="16" height="10" fill="#d1d5db" />
 
-      {/* Torso */}
-      <path
-        d={`
-          M ${110 - shoulder / 2} 70
-          Q 110 ${70 + chest} ${110 + shoulder / 2} 70
-          L ${110 + waist / 2} 160
-          Q 110 ${160 + chest / 2} ${110 - waist / 2} 160
-          Z
-        `}
-        fill="#e5e5e5"
-      />
+        {/* Torso */}
+        <path
+          d="
+            M70 70
+            Q100 55 130 70
+            L120 160
+            Q100 175 80 160
+            Z
+          "
+          fill="#e5e7eb"
+        />
 
-      {/* Shoulders (delts) */}
-      <ellipse cx={110 - shoulder / 2} cy="80" rx="18" ry="12" fill="#e5e5e5" />
-      <ellipse cx={110 + shoulder / 2} cy="80" rx="18" ry="12" fill="#e5e5e5" />
+        {/* Shoulders */}
+        <ellipse cx="70" cy="75" rx="12" ry="8" fill="#e5e7eb" />
+        <ellipse cx="130" cy="75" rx="12" ry="8" fill="#e5e7eb" />
 
-      {/* Arms (proper shapes) */}
-      <ellipse cx={110 - shoulder / 2 - 15} cy="120" rx={armSize} ry="28" fill="#e5e5e5" />
-      <ellipse cx={110 + shoulder / 2 + 15} cy="120" rx={armSize} ry="28" fill="#e5e5e5" />
+        {/* Arms */}
+        <path d="M60 80 Q50 120 65 160" stroke="#e5e7eb" strokeWidth="14" fill="none" />
+        <path d="M140 80 Q150 120 135 160" stroke="#e5e7eb" strokeWidth="14" fill="none" />
 
-      {/* Forearms */}
-      <ellipse cx={110 - shoulder / 2 - 10} cy="165" rx={armSize * 0.8} ry="22" fill="#e5e5e5" />
-      <ellipse cx={110 + shoulder / 2 + 10} cy="165" rx={armSize * 0.8} ry="22" fill="#e5e5e5" />
+        {/* Forearms */}
+        <path d="M65 160 Q70 200 75 240" stroke="#e5e7eb" strokeWidth="10" />
+        <path d="M135 160 Q130 200 125 240" stroke="#e5e7eb" strokeWidth="10" />
 
-      {/* Quads */}
-      <ellipse cx={110 - 20} cy="200" rx={legSize} ry="40" fill="#e5e5e5" />
-      <ellipse cx={110 + 20} cy="200" rx={legSize} ry="40" fill="#e5e5e5" />
-
-      {/* Calves */}
-      <ellipse cx={110 - 20} cy="250" rx={legSize * 0.7} ry="28" fill="#e5e5e5" />
-      <ellipse cx={110 + 20} cy="250" rx={legSize * 0.7} ry="28" fill="#e5e5e5" />
-
-      {/* 🔥 Muscle detail */}
-      <g opacity={muscle} stroke="#9ca3af" strokeWidth="1.5" fill="none">
-
-        {/* Traps */}
-        <path d="M95 70 L110 55 L125 70" />
-
-        {/* Chest (pec split) */}
-        <path d={`M85 ${90 - t * 5} Q110 ${80 - t * 5} 135 ${90 - t * 5}`} />
-        <line x1="110" y1="85" x2="110" y2="115" />
-
-        {/* Abs (clean grid) */}
-        <line x1="100" y1="105" x2="120" y2="105" />
-        <line x1="100" y1="120" x2="120" y2="120" />
-        <line x1="100" y1="135" x2="120" y2="135" />
-
-        {/* Obliques */}
-        <path d="M90 110 L100 145" />
-        <path d="M130 110 L120 145" />
-
-        {/* Arms detail */}
-        <path d="M75 110 Q85 130 85 150" />
-        <path d="M145 110 Q135 130 135 150" />
-
-        {/* Quads lines */}
-        <line x1="90" y1="180" x2="85" y2="230" />
-        <line x1="130" y1="180" x2="135" y2="230" />
+        {/* Legs */}
+        <ellipse cx="85" cy="210" rx="14" ry="38" fill="#e5e7eb" />
+        <ellipse cx="115" cy="210" rx="14" ry="38" fill="#e5e7eb" />
 
         {/* Calves */}
-        <line x1="85" y1="240" x2="90" y2="270" />
-        <line x1="135" y1="240" x2="130" y2="270" />
+        <ellipse cx="85" cy="260" rx="10" ry="25" fill="#e5e7eb" />
+        <ellipse cx="115" cy="260" rx="10" ry="25" fill="#e5e7eb" />
 
-        {/* Groin */}
-        <path d="M100 160 Q110 170 120 160" />
+        {/* 🔥 Muscle lines */}
+        <g opacity={muscleOpacity} stroke="#9ca3af" strokeWidth="1.2" fill="none">
 
-      </g>
+          {/* Traps */}
+          <path d="M85 65 L100 55 L115 65" />
 
-    </svg>
+          {/* Chest */}
+          <path d="M75 90 Q100 80 125 90" />
+          <line x1="100" y1="85" x2="100" y2="120" />
+
+          {/* Abs */}
+          <line x1="90" y1="105" x2="110" y2="105" />
+          <line x1="90" y1="120" x2="110" y2="120" />
+          <line x1="90" y1="135" x2="110" y2="135" />
+
+          {/* Obliques */}
+          <path d="M80 110 L90 145" />
+          <path d="M120 110 L110 145" />
+
+          {/* Arms */}
+          <path d="M60 110 Q65 130 70 150" />
+          <path d="M140 110 Q135 130 130 150" />
+
+          {/* Quads */}
+          <line x1="80" y1="190" x2="75" y2="240" />
+          <line x1="120" y1="190" x2="125" y2="240" />
+
+          {/* Calves */}
+          <line x1="75" y1="240" x2="80" y2="275" />
+          <line x1="125" y1="240" x2="120" y2="275" />
+
+          {/* Groin */}
+          <path d="M90 165 Q100 175 110 165" />
+
+        </g>
+
+      </svg>
+    </div>
   );
 };
 export default function Home() {
