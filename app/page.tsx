@@ -152,6 +152,9 @@ export default function Home() {
       <div className="max-w-5xl mx-auto space-y-6">
 
         <h1 className="text-5xl font-bold text-center">CutForecast</h1>
+        <p className="text-center text-zinc-400 max-w-2xl mx-auto">
+        Plan your fat loss visually. Calculate your calories, track your progress, and see how your weight will change over time.
+        </p>
 
         <section className="grid md:grid-cols-2 gap-4">
 
@@ -221,7 +224,54 @@ export default function Home() {
           </div>
         )}
 
-        <div className="text-zinc-400 text-sm space-y-2">
+        <div className="text-zinc-400 text-sm space-y-6 max-w-3xl mx-auto">
+
+  <div>
+    <h2 className="text-white text-lg font-semibold">
+      What is CutForecast?
+    </h2>
+    <p>
+      CutForecast is a free fat loss calculator that helps you plan your weight loss journey.
+      It estimates your calorie needs based on your body fat, weight, and activity level,
+      then predicts how your weight will change over time.
+    </p>
+  </div>
+
+  <div>
+    <h2 className="text-white text-lg font-semibold">
+      How many calories should I eat to lose fat?
+    </h2>
+    <p>
+      Most people need a calorie deficit of 300–700 kcal per day to lose fat.
+      A smaller deficit leads to slower, more sustainable fat loss,
+      while a larger deficit leads to faster results but can be harder to maintain.
+      CutForecast automatically calculates your ideal calorie target.
+    </p>
+  </div>
+
+  <div>
+    <h2 className="text-white text-lg font-semibold">
+      How accurate is this calculator?
+    </h2>
+    <p>
+      This calculator is based on established formulas using lean body mass and energy balance.
+      While it provides a strong estimate, real-world results may vary depending on diet,
+      training consistency, sleep, and lifestyle factors.
+    </p>
+  </div>
+
+  <div>
+    <h2 className="text-white text-lg font-semibold">
+      Why does my weight fluctuate?
+    </h2>
+    <p>
+      Daily weight changes are normal and often caused by water retention, food intake,
+      and glycogen levels. This tool helps you focus on long-term trends rather than
+      short-term fluctuations.
+    </p>
+  </div>
+
+</div>
           <h2 className="text-white text-lg font-semibold">How this works</h2>
           <p>
             CutForecast estimates your calorie needs based on lean body mass and activity levels.
