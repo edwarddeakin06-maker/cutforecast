@@ -8,40 +8,21 @@ import {
   LinearScale,
   PointElement,
   LineElement,
-  Title,
-  Tooltip,
-  Legend,
 } from "chart.js";
 import dayjs from "dayjs";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
 
 type ResultsType = {
-  LBM: string;
   targetWeight: string;
   weeksToGoal: number;
   trend: number[];
   proteinTarget: number;
   suggestedCalories: number;
-  TDEE: number;
-  weeklyLossKg: string;
-  progressStatus: string;
   targetBF: number;
 };
 
-const generateTrend = (
-  current: number,
-  target: number,
-  weeks: number
-): number[] => {
+const generateTrend = (current: number, target: number, weeks: number) => {
   const arr: number[] = [];
   let w = current;
   const loss = (current - target) / weeks;
@@ -56,41 +37,67 @@ const generateTrend = (
   return arr;
 };
 
-// 🔥 Smooth physique mapping
 const getPhysiqueTargets = (value: number) => {
-  const targetBF = 20 - value * 0.1; // 20% → 10%
+  const targetBF = 20 - value * 0.1;
   const proteinMultiplier = 2 + value * 0.006;
   return { targetBF, proteinMultiplier };
 };
 
-// 🔥 Smooth animated body
+// 🔥 ANATOMY FIGURE (curved + muscle lines)
 const PhysiqueFigure = ({ level }: { level: number }) => {
-  const shoulder = 35 + level * 35;
-  const waist = 28 - level * 8;
-  const chest = 20 + level * 10;
-  const arms = 3 + level * 4;
-  const legs = 10 + level * 6;
+  const t = level;
+
+  const shoulder = 40 + t * 40;
+  const waist = 28 - t * 10;
+  const chest = 20 + t * 12;
+  const arm = 4 + t * 6;
+  const leg = 10 + t * 6;
+
+  const muscleOpacity = t;
 
   return (
-    <svg width="140" height="220" viewBox="0 0 140 220" className="mx-auto transition-all duration-500">
-      <circle cx="70" cy="25" r="11" fill="white" />
+    <svg width="160" height="240" viewBox="0 0 160 240" className="mx-auto transition-all duration-500">
 
+      {/* Head */}
+      <circle cx="80" cy="25" r="12" fill="#d4d4d4" />
+
+      {/* Torso */}
       <path
         d={`
-          M ${70 - shoulder / 2} 55
-          Q 70 ${55 + chest}, ${70 + shoulder / 2} 55
-          L ${70 + waist / 2} 120
-          Q 70 ${120 + chest / 2}, ${70 - waist / 2} 120
+          M ${80 - shoulder / 2} 60
+          Q 80 ${60 + chest}, ${80 + shoulder / 2} 60
+          L ${80 + waist / 2} 130
+          Q 80 ${130 + chest / 2}, ${80 - waist / 2} 130
           Z
         `}
-        fill="white"
+        fill="#e5e5e5"
       />
 
-      <line x1={70 - shoulder / 2 - 5} y1="70" x2={70 - shoulder / 2 - 20} y2="110" stroke="white" strokeWidth={arms} />
-      <line x1={70 + shoulder / 2 + 5} y1="70" x2={70 + shoulder / 2 + 20} y2="110" stroke="white" strokeWidth={arms} />
+      {/* Arms */}
+      <line x1={80 - shoulder / 2 - 5} y1="75" x2={80 - shoulder / 2 - 25} y2="130" stroke="#e5e5e5" strokeWidth={arm} />
+      <line x1={80 + shoulder / 2 + 5} y1="75" x2={80 + shoulder / 2 + 25} y2="130" stroke="#e5e5e5" strokeWidth={arm} />
 
-      <line x1={70 - legs} y1="120" x2={60 - legs} y2="200" stroke="white" strokeWidth="5" />
-      <line x1={70 + legs} y1="120" x2={80 + legs} y2="200" stroke="white" strokeWidth="5" />
+      {/* Legs */}
+      <line x1={80 - leg} y1="130" x2={65 - leg} y2="220" stroke="#e5e5e5" strokeWidth="6" />
+      <line x1={80 + leg} y1="130" x2={95 + leg} y2="220" stroke="#e5e5e5" strokeWidth="6" />
+
+      {/* 🔥 Muscle definition */}
+      <g opacity={muscleOpacity} stroke="#a3a3a3" strokeWidth="1.5">
+
+        {/* Chest line */}
+        <line x1="50" y1="80" x2="110" y2="80" />
+
+        {/* Abs */}
+        <line x1="70" y1="95" x2="90" y2="95" />
+        <line x1="70" y1="105" x2="90" y2="105" />
+        <line x1="70" y1="115" x2="90" y2="115" />
+
+        {/* Obliques */}
+        <line x1="60" y1="95" x2="70" y2="110" />
+        <line x1="100" y1="95" x2="90" y2="110" />
+
+      </g>
+
     </svg>
   );
 };
@@ -98,9 +105,9 @@ const PhysiqueFigure = ({ level }: { level: number }) => {
 export default function Home() {
   const chartRef = useRef<any>(null);
 
-  const [weight, setWeight] = useState(83.5);
-  const [bodyFat, setBodyFat] = useState(17);
-  const [trainingDays, setTrainingDays] = useState(3);
+  const [weight, setWeight] = useState("");
+  const [bodyFat, setBodyFat] = useState("");
+  const [trainingDays, setTrainingDays] = useState("");
   const [goalSpeed, setGoalSpeed] = useState("moderate");
   const [physiqueGoal, setPhysiqueGoal] = useState(50);
 
@@ -111,6 +118,8 @@ export default function Home() {
     const w = Number(weight);
     const bf = Number(bodyFat) / 100;
 
+    if (!w || !bf) return alert("Fill in your stats");
+
     const { targetBF, proteinMultiplier } = getPhysiqueTargets(physiqueGoal);
     const tbf = targetBF / 100;
 
@@ -120,8 +129,8 @@ export default function Home() {
     const BMR = 370 + 21.6 * LBM;
 
     let activityMultiplier = 1.2;
-    if (trainingDays <= 3) activityMultiplier = 1.375;
-    else if (trainingDays <= 5) activityMultiplier = 1.55;
+    if (Number(trainingDays) <= 3) activityMultiplier = 1.375;
+    else if (Number(trainingDays) <= 5) activityMultiplier = 1.55;
     else activityMultiplier = 1.725;
 
     const TDEE = BMR * activityMultiplier;
@@ -138,22 +147,12 @@ export default function Home() {
     const proteinTarget = Math.round(LBM * proteinMultiplier);
     const suggestedCalories = Math.round(TDEE - dailyDeficit);
 
-    const expectedNow = trend[0];
-    let progressStatus = "On track";
-
-    if (w < expectedNow - 0.3) progressStatus = "Ahead of schedule 🔥";
-    else if (w > expectedNow + 0.3) progressStatus = "Behind schedule ⚠️";
-
     setResults({
-      LBM: LBM.toFixed(1),
       targetWeight: targetWeight.toFixed(1),
       weeksToGoal,
       trend,
       proteinTarget,
       suggestedCalories,
-      TDEE: Math.round(TDEE),
-      weeklyLossKg: weeklyLossKg.toFixed(2),
-      progressStatus,
       targetBF: Math.round(targetBF),
     });
   };
@@ -162,13 +161,7 @@ export default function Home() {
     const chart = chartRef.current;
     if (!chart) return;
 
-    const points = chart.getElementsAtEventForMode(
-      e.nativeEvent,
-      "nearest",
-      { intersect: true },
-      false
-    );
-
+    const points = chart.getElementsAtEventForMode(e.nativeEvent, "nearest", { intersect: true }, false);
     if (points.length > 0) setDraggingIndex(points[0].index);
   };
 
@@ -181,23 +174,19 @@ export default function Home() {
     let newValue = yAxis.getValueForPixel(e.nativeEvent.offsetY);
     newValue = Math.max(60, Math.min(120, newValue));
 
-    let updatedTrend = [...results.trend];
-    updatedTrend[draggingIndex] = parseFloat(newValue.toFixed(1));
+    let updated = [...results.trend];
+    updated[draggingIndex] = parseFloat(newValue.toFixed(1));
 
-    const targetWeight = Number(results.targetWeight);
+    const target = Number(results.targetWeight);
 
-    for (let i = draggingIndex + 1; i < updatedTrend.length; i++) {
-      const stepsLeft = updatedTrend.length - i;
-      const current = updatedTrend[i - 1];
-
-      const step = (current - targetWeight) / stepsLeft;
-      const fluct = (Math.random() - 0.5) * 0.3;
-
-      const next = current - step + fluct;
-      updatedTrend[i] = parseFloat(next.toFixed(1));
+    for (let i = draggingIndex + 1; i < updated.length; i++) {
+      const remaining = updated.length - i;
+      const current = updated[i - 1];
+      const step = (current - target) / remaining;
+      updated[i] = parseFloat((current - step).toFixed(1));
     }
 
-    setResults({ ...results, trend: updatedTrend });
+    setResults({ ...results, trend: updated });
   };
 
   const handleMouseUp = () => setDraggingIndex(null);
@@ -208,20 +197,13 @@ export default function Home() {
 
         <h1 className="text-5xl font-bold text-center">CutForecast</h1>
 
-        {/* 🔥 Physique Section */}
+        {/* Physique */}
         <div className="bg-zinc-900 p-6 rounded-xl text-center space-y-4">
           <h2 className="text-xl font-semibold">Your Goal Physique</h2>
 
           <PhysiqueFigure level={physiqueGoal / 100} />
 
-          <input
-            type="range"
-            min="0"
-            max="100"
-            value={physiqueGoal}
-            onChange={(e) => setPhysiqueGoal(Number(e.target.value))}
-            className="w-full"
-          />
+          <input type="range" min="0" max="100" value={physiqueGoal} onChange={(e) => setPhysiqueGoal(Number(e.target.value))} className="w-full" />
 
           <div className="flex justify-between text-sm text-zinc-400">
             <span>Skinny</span>
@@ -230,15 +212,17 @@ export default function Home() {
           </div>
         </div>
 
+        {/* Inputs */}
         <section className="grid md:grid-cols-2 gap-4">
 
           <div className="bg-zinc-900 p-4 rounded-xl space-y-3">
             <h2 className="text-xl font-semibold">Your Stats</h2>
 
-            <input type="number" value={weight} onChange={(e) => setWeight(Number(e.target.value))} className="w-full p-3 bg-zinc-800 rounded" />
-            <input type="number" value={bodyFat} onChange={(e) => setBodyFat(Number(e.target.value))} className="w-full p-3 bg-zinc-800 rounded" />
+            <input type="number" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder="Enter your weight (kg)" className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400" />
 
-            <input type="number" value={trainingDays} onChange={(e) => setTrainingDays(Number(e.target.value))} className="w-full p-3 bg-zinc-800 rounded" />
+            <input type="number" value={bodyFat} onChange={(e) => setBodyFat(e.target.value)} placeholder="Enter body fat %" className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400" />
+
+            <input type="number" value={trainingDays} onChange={(e) => setTrainingDays(e.target.value)} placeholder="Training days per week" className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400" />
 
             <select value={goalSpeed} onChange={(e) => setGoalSpeed(e.target.value)} className="w-full p-3 bg-zinc-800 rounded">
               <option value="slow">Slow</option>
@@ -254,8 +238,6 @@ export default function Home() {
           {results && (
             <div className="bg-zinc-900 p-4 rounded-xl space-y-2">
               <h2 className="text-xl font-semibold">Your Plan</h2>
-
-              <p>{results.progressStatus}</p>
               <p>Calories: {results.suggestedCalories} kcal</p>
               <p>Protein: {results.proteinTarget}g/day</p>
               <p>Target Body Fat: {results.targetBF}%</p>
@@ -264,8 +246,9 @@ export default function Home() {
           )}
         </section>
 
+        {/* Graph */}
         {results && (
-          <div className="bg-white text-black p-6 rounded-xl">
+          <div className="bg-white text-black p-6 rounded-xl w-full">
             <div onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
               <Line
                 ref={chartRef}
@@ -278,7 +261,7 @@ export default function Home() {
                       label: "Weight",
                       data: results.trend,
                       borderColor: "red",
-                      pointRadius: 6,
+                      tension: 0.4,
                     },
                   ],
                 }}
@@ -287,7 +270,7 @@ export default function Home() {
           </div>
         )}
 
-        {/* 🔥 SEO CONTENT BACK */}
+        {/* SEO CONTENT */}
         <div className="text-zinc-400 text-sm space-y-6 max-w-3xl mx-auto">
 
           <div>
@@ -312,6 +295,12 @@ export default function Home() {
             </p>
           </div>
 
+        </div>
+
+        {/* Footer */}
+        <div className="text-center text-xs text-zinc-500 mt-10">
+          <a href="/privacy" className="mr-4">Privacy Policy</a>
+          <a href="/terms">Terms of Service</a>
         </div>
 
       </div>
