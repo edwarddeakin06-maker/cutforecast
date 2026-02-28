@@ -25,7 +25,7 @@ ChartJS.register(
   Legend
 );
 
-const getMilestone = (bf) => {
+const getMilestone = (bf: number) => {
   if (bf <= 10) return "Visible abs";
   if (bf <= 14) return "Lean physique";
   if (bf <= 18) return "Athletic";
