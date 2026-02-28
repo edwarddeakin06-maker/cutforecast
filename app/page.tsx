@@ -47,6 +47,7 @@ export default function Home() {
 
   const [results, setResults] = useState<ResultsType | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [targetBodyFat, setTargetBodyFat] = useState("12");
 
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
@@ -57,7 +58,7 @@ export default function Home() {
 
     if (!w || !bf) return alert("Please fill in your stats");
 
-    const targetBF = 12;
+    const targetBF = Number(targetBodyFat) || 12;
     const tbf = targetBF / 100;
 
     const LBM = w * (1 - bf);
@@ -150,6 +151,8 @@ export default function Home() {
           <div className="bg-zinc-900 p-4 rounded-xl space-y-3">
             <h2 className="text-xl font-semibold">Your Stats</h2>
 
+
+
             <input
               type="number"
               value={weight}
@@ -172,6 +175,17 @@ export default function Home() {
               onChange={(e) => setTrainingDays(e.target.value)}
               placeholder="Training days per week"
               className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
+
+
+            />
+
+
+            <input
+            type="number"
+            value={targetBodyFat}
+            onChange={(e) => setTargetBodyFat(e.target.value)}
+            placeholder="Target body fat % (e.g. 12)"
+            className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
             />
 
             <select
@@ -226,6 +240,9 @@ export default function Home() {
                 ],
               }}
             />
+            <p className="text-sm text-gray-600 mt-3 text-center">
+            Try dragging the points to simulate cheat days — the rest of the plan will adjust.
+            </p>
           </div>
         </div>
 
