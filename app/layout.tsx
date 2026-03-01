@@ -19,8 +19,6 @@ export const metadata = {
     "Free fat loss calculator. Calculate your calories, protein, and predict your weight loss over time with CutForecast.",
 };
 
-
-
 export default function RootLayout({
   children,
 }: {
@@ -40,6 +38,20 @@ export default function RootLayout({
         />
 
         {children}
+
+        {/* Google Analytics */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-5R036JJT5E"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-5R036JJT5E');
+          `}
+        </Script>
 
       </body>
     </html>
