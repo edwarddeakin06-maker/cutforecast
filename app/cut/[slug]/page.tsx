@@ -1,14 +1,13 @@
 export const dynamic = "force-dynamic";
 
 type Props = {
-  params?: { slug?: string };
+  params: { slug: string };
 };
 
 export default function Page({ params }: Props) {
   const slug = params?.slug;
 
-  // Safety checks (this is what stops the build crashing)
-  if (!slug || typeof slug !== "string") {
+  if (!slug) {
     return <div style={{ padding: "20px" }}>Loading...</div>;
   }
 
@@ -43,11 +42,7 @@ export default function Page({ params }: Props) {
 
       <p>
         This is just a rough estimate — actual progress depends on calories,
-        activity, and consistency over time.
-      </p>
-
-      <p>
-        Use the main calculator on the homepage for a more accurate prediction.
+        activity, and consistency.
       </p>
     </div>
   );
