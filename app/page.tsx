@@ -47,7 +47,7 @@ export default function Home() {
 
   const [results, setResults] = useState<ResultsType | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [targetBodyFat, setTargetBodyFat] = useState("12");
+  const [targetBodyFat, setTargetBodyFat] = useState("");
   const [sex, setSex] = useState("");
   const [height, setHeight] = useState("");
   const [age, setAge] = useState("");
