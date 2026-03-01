@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 type Props = {
   params: { slug?: string };
 };
