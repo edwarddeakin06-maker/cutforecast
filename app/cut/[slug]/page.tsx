@@ -1,59 +1,54 @@
+export const dynamic = "force-dynamic";
+
 type Props = {
-  params: { slug: string };
+  params?: { slug?: string };
 };
 
-export default function CutPage({ params }: Props) {
-  const slug = params.slug; // "85kg-to-75kg"
+export default function Page({ params }: Props) {
+  const slug = params?.slug;
 
-  // Extract numbers
-  const match = slug.match(/(\d+)kg-to-(\d+)kg/);
-  const start = match ? parseInt(match[1]) : null;
-  const end = match ? parseInt(match[2]) : null;
+  // Safety checks (this is what stops the build crashing)
+  if (!slug || typeof slug !== "string") {
+    return <div style={{ padding: "20px" }}>Loading...</div>;
+  }
 
-  if (!start || !end) {
-    return <div>Invalid page</div>;
+  const parts = slug.split("-to-");
+
+  if (parts.length !== 2) {
+    return <div style={{ padding: "20px" }}>Invalid page</div>;
+  }
+
+  const start = parseInt(parts[0].replace("kg", ""));
+  const end = parseInt(parts[1].replace("kg", ""));
+
+  if (isNaN(start) || isNaN(end) || start <= end) {
+    return <div style={{ padding: "20px" }}>Invalid page</div>;
   }
 
   const diff = start - end;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>
-        How long to go from {start}kg to {end}kg
-      </h1>
+    <div style={{ padding: "20px", maxWidth: "700px", margin: "0 auto" }}>
+      <h1>How long to go from {start}kg to {end}kg</h1>
 
       <p>
-        Losing {diff}kg typically takes:
+        Losing {diff}kg will usually take longer than most people expect,
+        especially as progress slows down towards the end.
       </p>
 
       <ul>
-        <li>At 0.5kg/week → {Math.round(diff / 0.5)} weeks</li>
-        <li>At 1kg/week → {Math.round(diff / 1)} weeks</li>
+        <li>At 0.5kg/week → ~{Math.round(diff / 0.5)} weeks</li>
+        <li>At 1kg/week → ~{Math.round(diff / 1)} weeks</li>
       </ul>
 
       <p>
-        Progress usually slows down as you get leaner, so expect the later stages to take longer.
+        This is just a rough estimate — actual progress depends on calories,
+        activity, and consistency over time.
       </p>
 
       <p>
-        Use the calculator below to get a more accurate timeline:
+        Use the main calculator on the homepage for a more accurate prediction.
       </p>
-
-      {/* Embed your existing calculator component here */}
     </div>
   );
-}
-
-export async function generateStaticParams() {
-  const pages = [];
-
-  for (let start = 60; start <= 140; start += 5) {
-    for (let end = 50; end < start; end += 5) {
-      pages.push({
-        slug: `${start}kg-to-${end}kg`,
-      });
-    }
-  }
-
-  return pages;
 }
