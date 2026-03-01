@@ -1,9 +1,13 @@
 type Props = {
-  params?: { slug?: string };
+  params: { slug?: string };
 };
 
 export default function CutPage({ params }: Props) {
-  const slug = params?.slug || "";
+  const slug = params?.slug ?? "";
+
+  if (typeof slug !== "string") {
+    return <div>Invalid page</div>;
+  }
 
   const match = slug.match(/(\d+)kg-to-(\d+)kg/);
 
@@ -13,13 +17,16 @@ export default function CutPage({ params }: Props) {
 
   const start = parseInt(match[1]);
   const end = parseInt(match[2]);
+
+  if (isNaN(start) || isNaN(end)) {
+    return <div>Invalid page</div>;
+  }
+
   const diff = start - end;
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>
-        How long to go from {start}kg to {end}kg
-      </h1>
+      <h1>How long to go from {start}kg to {end}kg</h1>
 
       <p>Losing {diff}kg typically takes:</p>
 
@@ -37,4 +44,18 @@ export default function CutPage({ params }: Props) {
       </p>
     </div>
   );
+}
+
+export async function generateStaticParams() {
+  const pages = [];
+
+  for (let start = 60; start <= 140; start += 5) {
+    for (let end = 50; end < start; end += 5) {
+      pages.push({
+        slug: `${start}kg-to-${end}kg`,
+      });
+    }
+  }
+
+  return pages;
 }
