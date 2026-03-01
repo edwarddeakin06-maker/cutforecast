@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 
-export default function Page({ params }: any) {
-  const slug = params?.slug;
+export default async function Page({ params }: any) {
+  const resolvedParams = await params;
+  const slug = resolvedParams?.slug;
 
   if (!slug) {
     return <div style={{ padding: "20px" }}>No slug</div>;
