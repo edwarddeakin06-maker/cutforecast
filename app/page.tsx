@@ -213,7 +213,8 @@ export default function Home() {
             />
 
             <input
-            type="number"
+            type="text"
+            inputMode="numeric"
             value={targetBodyFat}
             onChange={(e) => setTargetBodyFat(e.target.value)}
             placeholder="Target body fat % (e.g. 12)"
