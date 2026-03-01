@@ -48,6 +48,8 @@ export default function Home() {
   const [results, setResults] = useState<ResultsType | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [targetBodyFat, setTargetBodyFat] = useState("12");
+  const [sex, setSex] = useState("");
+  const [height, setHeight] = useState("");
 
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
@@ -178,7 +180,24 @@ export default function Home() {
 
 
             />
+            <select
+            value={sex}
+            onChange={(e) => setSex(e.target.value)}
+            className="w-full p-3 bg-zinc-800 rounded text-gray-400"
+            >
+            <option value="">Select sex</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            </select>
 
+
+            <input
+            type="number"
+            value={height}
+            onChange={(e) => setHeight(e.target.value)}
+            placeholder="Enter your height (cm)"
+            className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
+            />
 
             <input
             type="number"
@@ -199,7 +218,14 @@ export default function Home() {
             </select>
 
             <button
-              onClick={calculate}
+              onClick={() => {
+                if (!weight || !bodyFat || !sex || !height) {
+                  return alert("Please fill in all fields");
+                }
+                else {
+                  calculate();
+                }
+              }}
               className="w-full py-3 bg-green-500 rounded font-bold text-black"
             >
               Calculate
