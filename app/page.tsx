@@ -50,6 +50,7 @@ export default function Home() {
   const [targetBodyFat, setTargetBodyFat] = useState("12");
   const [sex, setSex] = useState("");
   const [height, setHeight] = useState("");
+  const [age, setAge] = useState("");
 
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
@@ -57,8 +58,10 @@ export default function Home() {
   const calculate = () => {
     const w = Number(weight);
     const bf = Number(bodyFat) / 100;
+    const h = Number(height);
+    const a = Number(age);
 
-    if (!w || !bf) return alert("Please fill in your stats");
+    if (!w || !bf || !h || !a) return alert("Please fill in your stats");
 
     const targetBF = Number(targetBodyFat) || 12;
     const tbf = targetBF / 100;
@@ -66,7 +69,9 @@ export default function Home() {
     const LBM = w * (1 - bf);
     const targetWeight = LBM / (1 - tbf);
 
-    const BMR = 370 + 21.6 * LBM;
+    let BMR = 10 * w + 6.25 * h - 5 * a;
+    if (sex === "male") BMR += 5;
+    else BMR -= 161;
 
     let activityMultiplier = 1.2;
     if (Number(trainingDays) <= 3) activityMultiplier = 1.375;
@@ -190,6 +195,14 @@ export default function Home() {
             <option value="female">Female</option>
             </select>
 
+            <input
+              type="number"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              placeholder="Enter your age"
+              className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
+            />
+
 
             <input
             type="number"
@@ -219,7 +232,7 @@ export default function Home() {
 
             <button
               onClick={() => {
-                if (!weight || !bodyFat || !sex || !height) {
+                if (!weight || !bodyFat || !sex || !height || !age) {
                   return alert("Please fill in all fields");
                 }
                 else {
