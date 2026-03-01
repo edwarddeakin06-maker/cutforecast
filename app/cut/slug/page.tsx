@@ -46,16 +46,3 @@ export default function CutPage({ params }: Props) {
   );
 }
 
-export async function generateStaticParams() {
-  const pages = [];
-
-  for (let start = 60; start <= 140; start += 5) {
-    for (let end = 50; end < start; end += 5) {
-      pages.push({
-        slug: `${start}kg-to-${end}kg`,
-      });
-    }
-  }
-
-  return pages;
-}
