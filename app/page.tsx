@@ -58,6 +58,10 @@ export default function Home() {
   const [customCalories, setCustomCalories] = useState("");
   const [customProtein, setCustomProtein] = useState("");
   const [maintenanceCalories, setMaintenanceCalories] = useState<number | null>(null);
+  const [sliderColor, setSliderColor] = useState("green");
+  const [dailyDeficitValue, setDailyDeficitValue] = useState<number | null>(null);
+  const [weeklyLossValue, setWeeklyLossValue] = useState<number | null>(null);
+
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
 
@@ -111,6 +115,8 @@ export default function Home() {
       targetBF,
       
     });
+
+   
     setCustomCalories(String(suggestedCalories));
 
     const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
@@ -153,7 +159,14 @@ export default function Home() {
   }
 
   const dailyDeficit = TDEE - calories;
+  setDailyDeficitValue(Math.round(dailyDeficit));
+  const deficitLevel =
+  dailyDeficit < 400 ? "green" :
+  dailyDeficit < 700 ? "orange" :
+  "red";
+  setSliderColor(deficitLevel);
   const weeklyLossKg = (dailyDeficit * 7) / 7700;
+  setWeeklyLossValue(Number(weeklyLossKg.toFixed(2)));
 
   const targetBF = Number(targetBodyFat) || 12;
   const tbf = targetBF / 100;
@@ -178,7 +191,16 @@ export default function Home() {
   });
 
   const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
-  setGoalDate(goal);
+setGoalDate(goal);
+
+const milestoneWeeks = [4, 8, 12];
+const milestoneWeights = milestoneWeeks
+  .filter((w) => w < weeksToGoal)
+  .map((w) => trend[w - 1]);
+
+setMilestones(milestoneWeights);
+
+  
 };
 useEffect(() => {
   if (results && customCalories) {
@@ -410,8 +432,20 @@ useEffect(() => {
   step="50"
   value={Number(customCalories)}
   onChange={(e) => setCustomCalories(e.target.value)}
-  className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+  className={`w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer ${
+  sliderColor === "green"
+    ? "accent-green-500"
+    : sliderColor === "orange"
+    ? "accent-orange-500"
+    : "accent-red-500"
+}`}
 />
+{dailyDeficitValue && weeklyLossValue && (
+  <div className="text-xs text-zinc-400 mt-2 text-center">
+    <p>Daily deficit: {dailyDeficitValue} kcal</p>
+    <p>Expected loss: {weeklyLossValue} kg/week</p>
+  </div>
+)}
 
   <div className="flex justify-between text-xs text-zinc-500">
     <span>{maintenanceCalories ? maintenanceCalories - 900 : 1500}</span>
