@@ -94,54 +94,7 @@ export default function Home() {
       1,
       Math.ceil((w - targetWeight) / weeklyLossKg)
     );
-    const recalculateFromCustom = () => {
-  if (!results || !customCalories) return;
-
-  const w = Number(weight);
-  const bf = Number(bodyFat) / 100;
-  const h = Number(height);
-  const a = Number(age);
-
-  const LBM = w * (1 - bf);
-
-  let BMR = 10 * w + 6.25 * h - 5 * a;
-  if (sex === "male") BMR += 5;
-  else BMR -= 161;
-
-  let activityMultiplier = 1.2;
-  if (Number(trainingDays) <= 3) activityMultiplier = 1.375;
-  else if (Number(trainingDays) <= 5) activityMultiplier = 1.55;
-  else activityMultiplier = 1.725;
-
-  const TDEE = BMR * activityMultiplier;
-
-  const dailyDeficit = TDEE - Number(customCalories);
-
-  const weeklyLossKg = (dailyDeficit * 7) / 7700;
-
-  const targetBF = Number(targetBodyFat) || 12;
-  const tbf = targetBF / 100;
-
-  const targetWeight = LBM / (1 - tbf);
-
-  const weeksToGoal = Math.max(
-    1,
-    Math.ceil((w - targetWeight) / weeklyLossKg)
-  );
-
-  const trend = generateTrend(w, targetWeight, weeksToGoal);
-
-  setResults({
-    ...results,
-    weeksToGoal,
-    trend,
-    suggestedCalories: Number(customCalories),
-    proteinTarget: customProtein ? Number(customProtein) : results.proteinTarget
-  });
-
-  const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
-  setGoalDate(goal);
-};
+    
 
     const trend = generateTrend(w, targetWeight, weeksToGoal);
 
@@ -167,6 +120,62 @@ export default function Home() {
     setMilestones(milestoneWeights);
     setCheatImpact(null);
   };
+  const recalculateFromCustom = () => {
+  if (!results || !customCalories) return;
+
+  const w = Number(weight);
+  const bf = Number(bodyFat) / 100;
+  const h = Number(height);
+  const a = Number(age);
+
+  const LBM = w * (1 - bf);
+
+  let BMR = 10 * w + 6.25 * h - 5 * a;
+  if (sex === "male") BMR += 5;
+  else BMR -= 161;
+
+  let activityMultiplier = 1.2;
+  if (Number(trainingDays) <= 3) activityMultiplier = 1.375;
+  else if (Number(trainingDays) <= 5) activityMultiplier = 1.55;
+  else activityMultiplier = 1.725;
+
+  const TDEE = BMR * activityMultiplier;
+
+  const calories = Number(customCalories);
+
+  if (calories >= TDEE) {
+    alert("Calories must be below maintenance to lose weight.");
+    return;
+  }
+
+  const dailyDeficit = TDEE - calories;
+  const weeklyLossKg = (dailyDeficit * 7) / 7700;
+
+  const targetBF = Number(targetBodyFat) || 12;
+  const tbf = targetBF / 100;
+
+  const targetWeight = LBM / (1 - tbf);
+
+  const weeksToGoal = Math.max(
+    1,
+    Math.ceil((w - targetWeight) / weeklyLossKg)
+  );
+
+  const trend = generateTrend(w, targetWeight, weeksToGoal);
+
+  setResults({
+    ...results,
+    weeksToGoal,
+    trend,
+    suggestedCalories: calories,
+    proteinTarget: customProtein
+      ? Number(customProtein)
+      : results.proteinTarget,
+  });
+
+  const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
+  setGoalDate(goal);
+};
 
   // 🔥 Dragging logic
   const handleMouseDown = (e: any) => {
