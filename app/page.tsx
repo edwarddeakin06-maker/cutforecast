@@ -12,6 +12,27 @@ import {
 import dayjs from "dayjs";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
+const hoverLine = {
+  id: "hoverLine",
+  afterDraw(chart: any) {
+    if (chart.tooltip?._active?.length) {
+      const ctx = chart.ctx;
+      const activePoint = chart.tooltip._active[0];
+      const x = activePoint.element.x;
+      const topY = chart.scales.y.top;
+      const bottomY = chart.scales.y.bottom;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(x, topY);
+      ctx.lineTo(x, bottomY);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "rgba(255,255,255,0.3)";
+      ctx.stroke();
+      ctx.restore();
+    }
+  },
+};
 
 type ResultsType = {
   targetWeight: string;
@@ -492,12 +513,26 @@ useEffect(() => {
           >
             <Line
 ref={chartRef}
+plugins={[hoverLine]}
 options={{
 responsive: true,
 plugins: {
 legend: {
 display: true,
 position: "top"
+},
+tooltip: {
+callbacks: {
+title: (context) => {
+const week = context[0].dataIndex + 1;
+return `Week ${week}`;
+},
+label: (context) => {
+const weight = context.raw;
+const date = context.label;
+return [`Date: ${date}`, `Weight: ${weight} kg`];
+}
+}
 }
 },
 scales: {
