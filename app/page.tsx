@@ -347,29 +347,65 @@ useEffect(() => {
   };
 
   const handleMouseUp = () => setDraggingIndex(null);
-const downloadShareImage = async () => {
-  const element = shareCardRef.current;
+const downloadShareImage = () => {
+  const chart = chartRef.current;
 
-  if (!element) {
-    console.error("Share card not found");
+  if (!chart) {
+    console.error("Chart not found");
     return;
   }
 
-  try {
-    const canvas = await html2canvas(element, {
-  scale: 3,
-  backgroundColor: "#ffffff",
-  useCORS: true
-});
+  // get chart image
+  const chartImage = chart.toBase64Image();
+
+  // create canvas for final export
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+
+  canvas.width = 900;
+  canvas.height = 700;
+
+  if (!ctx) return;
+
+  // background
+  ctx.fillStyle = "#18181b";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const img = new Image();
+  img.src = chartImage;
+
+  img.onload = () => {
+    // draw graph
+    ctx.drawImage(img, 50, 80, 800, 350);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 36px sans-serif";
+    ctx.fillText("CutForecast", 50, 50);
+
+    ctx.font = "22px sans-serif";
+
+    ctx.fillText(`Start Weight: ${weight} kg`, 50, 470);
+
+    if (results) {
+      ctx.fillText(`Goal Body Fat: ${results.targetBF}%`, 50, 510);
+      ctx.fillText(`Calories: ${results.suggestedCalories} kcal`, 50, 550);
+      ctx.fillText(`Protein: ${results.proteinTarget} g/day`, 450, 510);
+      ctx.fillText(`Steps: ${stepTarget}`, 450, 550);
+    }
+
+    if (goalDate) {
+      ctx.fillText(`Goal Date: ${goalDate}`, 50, 590);
+    }
+
+    ctx.font = "16px sans-serif";
+    ctx.fillStyle = "#9ca3af";
+    ctx.fillText("Generated with CutForecast.com", 50, 640);
 
     const link = document.createElement("a");
-    link.download = "cutforecast-plan.png";
+    link.download = "cutforecast-forecast.png";
     link.href = canvas.toDataURL("image/png");
     link.click();
-
-  } catch (err) {
-    console.error("Error generating image:", err);
-  }
+  };
 };
   return (
     <main className="min-h-screen bg-zinc-950 text-white p-6">
