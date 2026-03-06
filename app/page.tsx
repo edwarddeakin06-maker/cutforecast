@@ -665,10 +665,26 @@ pointRadius: 0
 
     <div
   ref={shareCardRef}
-  className="bg-zinc-900 text-white p-6 rounded-xl max-w-sm mx-auto"
+  className="bg-zinc-900 text-white p-6 rounded-xl max-w-sm mx-auto text-center space-y-2"
 >
-      ...
-    </div>
+  <h3 className="text-xl font-bold">CutForecast Plan</h3>
+
+  <p>Start Weight: {weight} kg</p>
+
+  {results && (
+    <>
+      <p>Goal Body Fat: {results.targetBF}%</p>
+      <p>Calories: {results.suggestedCalories} kcal</p>
+      <p>Protein: {results.proteinTarget} g/day</p>
+      <p>Steps: {stepTarget} / day</p>
+      <p>Goal Date: {goalDate}</p>
+    </>
+  )}
+
+  <p className="text-xs text-zinc-400 mt-2">
+    Generated with CutForecast.com
+  </p>
+</div>
 
     <button
       onClick={downloadShareImage}
