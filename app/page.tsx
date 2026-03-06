@@ -567,7 +567,7 @@ const downloadShareImage = async () => {
         )}
 
         {/* 🔥 GRAPH (always visible) */}
-        <div ref={shareCardRef} className="bg-white text-black p-6 rounded-xl w-full">
+        <div className="bg-white text-black p-6 rounded-xl w-full">
           <p className="text-center text-xs text-gray-500 mb-2">
   Generated with CutForecast.com
 </p>
@@ -661,12 +661,12 @@ pointRadius: 0
         </div>
         </div>
         {results && (
-  <div className="mt-6 text-center">
+  <div className="mt-6 text-center space-y-4">
 
     <div
-      
-      className="bg-zinc-900 text-white p-6 rounded-xl max-w-sm mx-auto"
-    >
+  ref={shareCardRef}
+  className="bg-zinc-900 text-white p-6 rounded-xl max-w-sm mx-auto"
+>
       ...
     </div>
 
