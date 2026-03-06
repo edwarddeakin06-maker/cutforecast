@@ -130,7 +130,13 @@ export default function Home() {
 
     setStepTarget(steps);
 
-    const weeklyLossKg = (dailyDeficit * 7) / 7700;
+    let proteinAdjustment = 1;
+
+if (customProtein && results && Number(customProtein) < results.proteinTarget * 0.7) {
+  proteinAdjustment = 0.85;
+}
+
+const weeklyLossKg = ((dailyDeficit * 7) / 7700) * proteinAdjustment;
     const weeksToGoal = Math.max(
       1,
       Math.ceil((w - targetWeight) / weeklyLossKg)
@@ -291,27 +297,28 @@ useEffect(() => {
   };
 
   const handleMouseUp = () => setDraggingIndex(null);
-  const downloadShareImage = async () => {
+ const downloadShareImage = async () => {
   if (!shareCardRef.current) return;
 
   try {
     const canvas = await html2canvas(shareCardRef.current, {
       backgroundColor: "#18181b",
-      scale: 2
+      scale: 2,
+      useCORS: true
     });
 
     const image = canvas.toDataURL("image/png");
 
-    const link = document.createElement("a");
-    link.href = image;
-    link.download = "cutforecast-plan.png";
+    const a = document.createElement("a");
+    a.href = image;
+    a.download = "cutforecast-plan.png";
 
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
 
-  } catch (err) {
-    console.error("Image generation failed:", err);
+  } catch (error) {
+    console.error(error);
   }
 };
   return (
