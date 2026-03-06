@@ -1,6 +1,6 @@
 "use client";
 import html2canvas from "html2canvas";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -108,7 +108,10 @@ export default function Home() {
       proteinTarget,
       suggestedCalories,
       targetBF,
+      
     });
+    setCustomCalories(String(suggestedCalories));
+
     const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
     setGoalDate(goal);
 
@@ -176,6 +179,11 @@ export default function Home() {
   const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
   setGoalDate(goal);
 };
+useEffect(() => {
+  if (results && customCalories) {
+    recalculateFromCustom();
+  }
+}, [customCalories]);
 
   // 🔥 Dragging logic
   const handleMouseDown = (e: any) => {
@@ -385,13 +393,35 @@ export default function Home() {
           Adjust your diet
           </h3>
 
-          <input
-          type="number"
-          value={customCalories}
-          onChange={(e) => setCustomCalories(e.target.value)}
-          placeholder="Calories you plan to eat per day"
-          className="w-full p-3 bg-zinc-800 rounded"
-          />
+          <div className="space-y-3">
+
+  <div className="flex justify-between text-sm text-zinc-400">
+    <span>Calories per day</span>
+    <span className="font-semibold text-white">
+      {customCalories || results?.suggestedCalories} kcal
+    </span>
+  </div>
+
+  <input
+    type="range"
+    min={Math.round((results?.suggestedCalories || 2000) - 800)}
+    max={Math.round((results?.suggestedCalories || 2000) + 800)}
+    step="50"
+    value={customCalories || results?.suggestedCalories || 2000}
+    onChange={(e) => setCustomCalories(e.target.value)}
+    className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+  />
+
+  <div className="flex justify-between text-xs text-zinc-500">
+    <span>
+      {Math.round((results?.suggestedCalories || 2000) - 800)}
+    </span>
+    <span>
+      {Math.round((results?.suggestedCalories || 2000) + 800)}
+    </span>
+  </div>
+
+</div>
 
           <input
           type="number"
@@ -401,12 +431,7 @@ export default function Home() {
           className="w-full p-3 bg-zinc-800 rounded"
           />
 
-          <button
-          onClick={recalculateFromCustom}
-          className="w-full py-2 bg-blue-500 rounded font-bold"
-          >
-          Recalculate timeline
-          </button>
+          
 
           </div>
           )}
