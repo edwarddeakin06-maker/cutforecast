@@ -164,6 +164,7 @@ const trimmedTrend = trend.slice(0, finalWeek);
   proteinTarget,
   suggestedCalories,
   targetBF,
+  
 });
 
    
@@ -172,13 +173,32 @@ const trimmedTrend = trend.slice(0, finalWeek);
     const goal = dayjs().add(finalWeek, "week").format("MMM D YYYY");
     setGoalDate(goal);
 
-    const milestoneWeeks = [4, 8, 12];
-    const milestoneWeights = milestoneWeeks
-    .filter((w) => w < finalWeek)
-    .map((w) => trimmedTrend[w - 1]);
+    const milestoneCount = 3;
+
+const milestoneWeeks = Array.from(
+  { length: milestoneCount },
+  (_, i) => Math.round(((i + 1) / milestoneCount) * finalWeek)
+);
+
+const milestoneWeights = milestoneWeeks.map((w) => trimmedTrend[w - 1]);
 
     setMilestones(milestoneWeights);
     setCheatImpact(null);
+    localStorage.setItem(
+  "cutforecast-data",
+  JSON.stringify({
+    weight,
+    bodyFat,
+    trainingDays,
+    sex,
+    height,
+    age,
+    goalSpeed,
+    targetBodyFat,
+    customCalories,
+    customProtein
+  })
+);
   };
   const recalculateFromCustom = () => {
   if (!results || !customCalories) return;
@@ -243,15 +263,37 @@ const trimmedTrend = trend.slice(0, finalWeek);
   const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
 setGoalDate(goal);
 
-const milestoneWeeks = [4, 8, 12];
-const milestoneWeights = milestoneWeeks
-  .filter((w) => w < weeksToGoal)
-  .map((w) => trend[w - 1]);
+const milestoneCount = 3;
+
+const milestoneWeeks = Array.from(
+  { length: milestoneCount },
+  (_, i) => Math.round(((i + 1) / milestoneCount) * weeksToGoal)
+);
+
+const milestoneWeights = milestoneWeeks.map((w) => trend[w - 1]);
 
 setMilestones(milestoneWeights);
 
   
 };
+useEffect(() => {
+  const saved = localStorage.getItem("cutforecast-data");
+
+  if (!saved) return;
+
+  const data = JSON.parse(saved);
+
+  if (data.weight) setWeight(data.weight);
+  if (data.bodyFat) setBodyFat(data.bodyFat);
+  if (data.trainingDays) setTrainingDays(data.trainingDays);
+  if (data.sex) setSex(data.sex);
+  if (data.height) setHeight(data.height);
+  if (data.age) setAge(data.age);
+  if (data.goalSpeed) setGoalSpeed(data.goalSpeed);
+  if (data.targetBodyFat) setTargetBodyFat(data.targetBodyFat);
+  if (data.customCalories) setCustomCalories(data.customCalories);
+  if (data.customProtein) setCustomProtein(data.customProtein);
+}, []);
 useEffect(() => {
   if (results && customCalories) {
     recalculateFromCustom();
