@@ -358,21 +358,17 @@ const downloadShareImage = async () => {
   try {
     const canvas = await html2canvas(element, {
       backgroundColor: "#18181b",
-      scale: 3
+      scale: 2,
+      logging: false
     });
 
-    const image = canvas.toDataURL("image/png");
-
     const link = document.createElement("a");
-    link.href = image;
     link.download = "cutforecast-plan.png";
-
-    document.body.appendChild(link);
+    link.href = canvas.toDataURL("image/png");
     link.click();
-    document.body.removeChild(link);
 
-  } catch (error) {
-    console.error("Error generating image:", error);
+  } catch (err) {
+    console.error("Error generating image:", err);
   }
 };
   return (
