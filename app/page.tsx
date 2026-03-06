@@ -55,7 +55,8 @@ export default function Home() {
   const [milestones, setMilestones] = useState<number[]>([]);
   const [cheatImpact, setCheatImpact] = useState<number | null>(null);
   const shareCardRef = useRef<HTMLDivElement>(null);
-
+  const [customCalories, setCustomCalories] = useState("");
+  const [customProtein, setCustomProtein] = useState("");
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
 
@@ -93,6 +94,54 @@ export default function Home() {
       1,
       Math.ceil((w - targetWeight) / weeklyLossKg)
     );
+    const recalculateFromCustom = () => {
+  if (!results || !customCalories) return;
+
+  const w = Number(weight);
+  const bf = Number(bodyFat) / 100;
+  const h = Number(height);
+  const a = Number(age);
+
+  const LBM = w * (1 - bf);
+
+  let BMR = 10 * w + 6.25 * h - 5 * a;
+  if (sex === "male") BMR += 5;
+  else BMR -= 161;
+
+  let activityMultiplier = 1.2;
+  if (Number(trainingDays) <= 3) activityMultiplier = 1.375;
+  else if (Number(trainingDays) <= 5) activityMultiplier = 1.55;
+  else activityMultiplier = 1.725;
+
+  const TDEE = BMR * activityMultiplier;
+
+  const dailyDeficit = TDEE - Number(customCalories);
+
+  const weeklyLossKg = (dailyDeficit * 7) / 7700;
+
+  const targetBF = Number(targetBodyFat) || 12;
+  const tbf = targetBF / 100;
+
+  const targetWeight = LBM / (1 - tbf);
+
+  const weeksToGoal = Math.max(
+    1,
+    Math.ceil((w - targetWeight) / weeklyLossKg)
+  );
+
+  const trend = generateTrend(w, targetWeight, weeksToGoal);
+
+  setResults({
+    ...results,
+    weeksToGoal,
+    trend,
+    suggestedCalories: Number(customCalories),
+    proteinTarget: customProtein ? Number(customProtein) : results.proteinTarget
+  });
+
+  const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
+  setGoalDate(goal);
+};
 
     const trend = generateTrend(w, targetWeight, weeksToGoal);
 
@@ -320,6 +369,38 @@ export default function Home() {
             )}
             </div>
             )}
+            {results && (
+          <div className="bg-zinc-900 p-4 rounded-xl mt-4 space-y-3">
+
+          <h3 className="text-lg font-semibold text-center">
+          Adjust your diet
+          </h3>
+
+          <input
+          type="number"
+          value={customCalories}
+          onChange={(e) => setCustomCalories(e.target.value)}
+          placeholder="Calories you plan to eat per day"
+          className="w-full p-3 bg-zinc-800 rounded"
+          />
+
+          <input
+          type="number"
+          value={customProtein}
+          onChange={(e) => setCustomProtein(e.target.value)}
+          placeholder="Protein per day (optional)"
+          className="w-full p-3 bg-zinc-800 rounded"
+          />
+
+          <button
+          onClick={recalculateFromCustom}
+          className="w-full py-2 bg-blue-500 rounded font-bold"
+          >
+          Recalculate timeline
+          </button>
+
+          </div>
+          )}
           </div>
         </section>
         {milestones.length > 0 && (
