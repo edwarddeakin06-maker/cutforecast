@@ -144,30 +144,38 @@ const weeklyLossKg = ((dailyDeficit * 7) / 7700) * proteinAdjustment;
     
 
     const trend = generateTrend(w, targetWeight, weeksToGoal);
+    let finalWeek = weeksToGoal;
 
+for (let i = 0; i < trend.length; i++) {
+  if (trend[i] <= targetWeight) {
+    finalWeek = i + 1;
+    break;
+  }
+}
+
+const trimmedTrend = trend.slice(0, finalWeek);
     const proteinTarget = Math.round(LBM * 2.2);
     const suggestedCalories = Math.round(TDEE - dailyDeficit);
 
     setResults({
-      targetWeight: targetWeight.toFixed(1),
-      weeksToGoal,
-      trend,
-      proteinTarget,
-      suggestedCalories,
-      targetBF,
-      
-    });
+  targetWeight: targetWeight.toFixed(1),
+  weeksToGoal: finalWeek,
+  trend: trimmedTrend,
+  proteinTarget,
+  suggestedCalories,
+  targetBF,
+});
 
    
     setCustomCalories(String(suggestedCalories));
 
-    const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
+    const goal = dayjs().add(finalWeek, "week").format("MMM D YYYY");
     setGoalDate(goal);
 
     const milestoneWeeks = [4, 8, 12];
     const milestoneWeights = milestoneWeeks
-    .filter((w) => w < weeksToGoal)
-    .map((w) => trend[w - 1]);
+    .filter((w) => w < finalWeek)
+    .map((w) => trimmedTrend[w - 1]);
 
     setMilestones(milestoneWeights);
     setCheatImpact(null);
