@@ -1,5 +1,5 @@
 "use client";
-
+import html2canvas from "html2canvas";
 import { useState, useRef } from "react";
 import { Line } from "react-chartjs-2";
 import {
@@ -51,6 +51,10 @@ export default function Home() {
   const [sex, setSex] = useState("");
   const [height, setHeight] = useState("");
   const [age, setAge] = useState("");
+  const [goalDate, setGoalDate] = useState<string | null>(null);
+  const [milestones, setMilestones] = useState<number[]>([]);
+  const [cheatImpact, setCheatImpact] = useState<number | null>(null);
+  const shareCardRef = useRef<HTMLDivElement>(null);
 
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
@@ -103,6 +107,16 @@ export default function Home() {
       suggestedCalories,
       targetBF,
     });
+    const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
+    setGoalDate(goal);
+
+    const milestoneWeeks = [4, 8, 12];
+    const milestoneWeights = milestoneWeeks
+    .filter((w) => w < weeksToGoal)
+    .map((w) => trend[w - 1]);
+
+    setMilestones(milestoneWeights);
+    setCheatImpact(null);
   };
 
   // 🔥 Dragging logic
@@ -140,18 +154,37 @@ export default function Home() {
       const step = (current - target) / remaining;
       updated[i] = parseFloat((current - step).toFixed(1));
     }
+    const originalGoalWeeks = results.weeksToGoal;
+    const newEndWeight = updated[updated.length - 1];
 
+    if (newEndWeight > Number(results.targetWeight)) {
+    const diff = newEndWeight - Number(results.targetWeight);
+    const delay = Math.ceil(diff / 0.2);
+    setCheatImpact(delay);
+    }
     setResults({ ...results, trend: updated });
   };
 
   const handleMouseUp = () => setDraggingIndex(null);
+  const downloadShareImage = async () => {
+  if (!shareCardRef.current) return;
 
+  const canvas = await html2canvas(shareCardRef.current);
+  const link = document.createElement("a");
+  link.download = "cutforecast-plan.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+  };
   return (
     <main className="min-h-screen bg-zinc-950 text-white p-6">
       <div className="max-w-5xl mx-auto space-y-6">
 
         <h1 className="text-5xl font-bold text-center">CutForecast</h1>
-
+        <p className="text-center text-zinc-400 max-w-2xl mx-auto">
+        Predict how long it will take to reach your goal body fat using calorie deficits,
+        training frequency and realistic fat-loss modelling.
+        Drag the graph to simulate cheat days and watch your timeline adjust.
+        </p>
         <section className="grid md:grid-cols-2 gap-4">
 
           {/* 🔥 INPUTS */}
@@ -254,8 +287,35 @@ export default function Home() {
             <p>Protein: {results ? results.proteinTarget : "--"} g/day</p>
             <p>Target Body Fat: {results ? results.targetBF : "--"}%</p>
             <p>Time to Goal: {results ? results.weeksToGoal : "--"} weeks</p>
+
+            {results && (
+            <p className="text-zinc-400 text-sm">
+            Maintenance calories after goal: ~{Math.round(results.suggestedCalories + 500)} kcal
+            </p>
+            )}
+
+            {results && (
+            <div className="bg-zinc-800 p-3 rounded-lg text-center mt-3">
+            <p className="text-lg font-semibold">
+            You will reach {results.targetBF}% body fat in approximately {results.weeksToGoal} weeks.
+            </p>
+            {goalDate && (
+            <p className="text-sm text-zinc-400">
+            Estimated goal date: {goalDate}
+            </p>
+            )}
+            </div>
+            )}
           </div>
         </section>
+        {milestones.length > 0 && (
+        <div className="mt-3 text-sm text-zinc-400">
+        <p className="font-semibold text-white">Projected milestones</p>
+        {milestones.map((w, i) => (
+        <p key={i}>Week {(i+1)*4}: {w} kg</p>
+        ))}
+        </div>
+        )}
 
         {/* 🔥 GRAPH (always visible) */}
         <div className="bg-white text-black p-6 rounded-xl w-full">
@@ -265,27 +325,98 @@ export default function Home() {
             onMouseUp={handleMouseUp}
           >
             <Line
-              ref={chartRef}
-              data={{
-                labels: (results?.trend || emptyTrend).map((_, i) =>
-                  dayjs().add(i, "week").format("MMM D")
-                ),
-                datasets: [
-                  {
-                    label: "Weight",
-                    data: results?.trend || emptyTrend,
-                    borderColor: "red",
-                    tension: 0.4,
-                  },
-                ],
-              }}
-            />
+ref={chartRef}
+options={{
+responsive: true,
+plugins: {
+legend: {
+display: true,
+position: "top"
+}
+},
+scales: {
+y: {
+title: {
+display: true,
+text: "Weight (kg)"
+}
+},
+x: {
+title: {
+display: true,
+text: "Timeline"
+}
+}
+}
+}}
+data={{
+labels: (results?.trend || emptyTrend).map((_, i) =>
+dayjs().add(i, "week").format("MMM D")
+),
+datasets: [
+{
+label: "Predicted Weight",
+data: results?.trend || emptyTrend,
+borderColor: "red",
+tension: 0.4,
+pointRadius: 5,
+pointHoverRadius: 8,
+pointHitRadius: 12,
+},
+
+{
+label: "Goal Weight",
+data: (results?.trend || emptyTrend).map(() =>
+results ? Number(results.targetWeight) : 0
+),
+borderColor: "green",
+borderDash: [5,5],
+pointRadius: 0
+}
+]
+}}
+/>
             <p className="text-sm text-gray-600 mt-3 text-center">
             Try dragging the points to simulate cheat days — the rest of the plan will adjust.
             </p>
-          </div>
+
+            {cheatImpact && (
+            <p className="text-red-400 text-center mt-2">
+            This change may delay your goal by about {cheatImpact} days.
+            </p>
+            )}
+        
+        {results && (
+        <div className="mt-6 text-center">
+
+        <div
+        ref={shareCardRef}
+        className="bg-zinc-900 text-white p-6 rounded-xl max-w-sm mx-auto"
+>
+        <h3 className="text-xl font-bold mb-2">CutForecast Plan</h3>
+
+        <p>Start Weight: {weight} kg</p>
+        <p>Goal Body Fat: {results.targetBF}%</p>
+        <p>Calories: {results.suggestedCalories} kcal</p>
+        <p>Protein: {results.proteinTarget} g/day</p>
+        <p>Goal Date: {goalDate}</p>
+
+        <p className="text-xs text-zinc-400 mt-3">
+        Generated with CutForecast
+        </p>
         </div>
 
+        <button
+        onClick={downloadShareImage}
+        className="mt-4 bg-blue-500 px-5 py-2 rounded font-bold"
+        >
+        Download Share Image
+        </button>
+
+        </div>
+        )}
+        </div>
+        </div>
         {/* 🔥 SEO */}
         <div className="text-zinc-400 text-sm space-y-6 max-w-3xl mx-auto">
 
