@@ -347,28 +347,23 @@ useEffect(() => {
   };
 
   const handleMouseUp = () => setDraggingIndex(null);
- const downloadShareImage = async () => {
+const downloadShareImage = async () => {
   if (!shareCardRef.current) return;
 
   try {
     const canvas = await html2canvas(shareCardRef.current, {
-      backgroundColor: "#18181b",
       scale: 3,
+      backgroundColor: "#18181b",
       useCORS: true
     });
 
-    const image = canvas.toDataURL("image/png");
+    const link = document.createElement("a");
+    link.download = "cutforecast-plan.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
 
-    const a = document.createElement("a");
-    a.href = image;
-    a.download = "cutforecast-plan.png";
-
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-
-  } catch (error) {
-    console.error(error);
+  } catch (err) {
+    console.error("Share image failed:", err);
   }
 };
   return (
@@ -564,9 +559,10 @@ useEffect(() => {
         {milestones.length > 0 && (
         <div className="mt-3 text-sm text-zinc-400">
         <p className="font-semibold text-white">Projected milestones</p>
-        {milestones.map((w, i) => (
-        <p key={i}>Week {(i+1)*4}: {w} kg</p>
-        ))}
+        {milestones.map((w, i) => {
+  const week = Math.round(((i + 1) / milestones.length) * (results?.weeksToGoal || 1));
+  return <p key={i}>Week {week}: {w} kg</p>;
+})}
         </div>
         )}
 
@@ -683,6 +679,7 @@ pointRadius: 0
 
   </div>
 )}
+        
         {/* 🔥 SEO */}
         <div className="text-zinc-400 text-sm space-y-6 max-w-3xl mx-auto">
 
