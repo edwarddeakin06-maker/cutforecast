@@ -8,10 +8,19 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  Tooltip,
+  Legend
 } from "chart.js";
 import dayjs from "dayjs";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Tooltip,
+  Legend
+);
 const hoverLine = {
   id: "hoverLine",
   afterDraw(chart: any) {
