@@ -169,12 +169,26 @@ export default function Home() {
   const downloadShareImage = async () => {
   if (!shareCardRef.current) return;
 
-  const canvas = await html2canvas(shareCardRef.current);
-  const link = document.createElement("a");
-  link.download = "cutforecast-plan.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
-  };
+  try {
+    const canvas = await html2canvas(shareCardRef.current, {
+      backgroundColor: "#18181b",
+      scale: 2
+    });
+
+    const image = canvas.toDataURL("image/png");
+
+    const link = document.createElement("a");
+    link.href = image;
+    link.download = "cutforecast-plan.png";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+  } catch (err) {
+    console.error("Image generation failed:", err);
+  }
+};
   return (
     <main className="min-h-screen bg-zinc-950 text-white p-6">
       <div className="max-w-5xl mx-auto space-y-6">
