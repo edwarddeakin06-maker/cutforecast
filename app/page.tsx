@@ -57,6 +57,7 @@ export default function Home() {
   const shareCardRef = useRef<HTMLDivElement>(null);
   const [customCalories, setCustomCalories] = useState("");
   const [customProtein, setCustomProtein] = useState("");
+  const [maintenanceCalories, setMaintenanceCalories] = useState<number | null>(null);
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
 
@@ -84,7 +85,7 @@ export default function Home() {
     else activityMultiplier = 1.725;
 
     const TDEE = BMR * activityMultiplier;
-
+    setMaintenanceCalories(Math.round(TDEE));
     let dailyDeficit = 500;
     if (goalSpeed === "slow") dailyDeficit = 300;
     if (goalSpeed === "aggressive") dailyDeficit = 700;
@@ -403,22 +404,18 @@ useEffect(() => {
   </div>
 
   <input
-    type="range"
-    min={Math.round((results?.suggestedCalories || 2000) - 800)}
-    max={Math.round((results?.suggestedCalories || 2000) + 800)}
-    step="50"
-    value={customCalories || results?.suggestedCalories || 2000}
-    onChange={(e) => setCustomCalories(e.target.value)}
-    className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-green-500"
-  />
+  type="range"
+  min={maintenanceCalories ? maintenanceCalories - 900 : 1500}
+  max={maintenanceCalories ? maintenanceCalories - 100 : 2600}
+  step="50"
+  value={Number(customCalories)}
+  onChange={(e) => setCustomCalories(e.target.value)}
+  className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+/>
 
   <div className="flex justify-between text-xs text-zinc-500">
-    <span>
-      {Math.round((results?.suggestedCalories || 2000) - 800)}
-    </span>
-    <span>
-      {Math.round((results?.suggestedCalories || 2000) + 800)}
-    </span>
+    <span>{maintenanceCalories ? maintenanceCalories - 900 : 1500}</span>
+    <span>{maintenanceCalories ? maintenanceCalories - 100 : 2600}</span>
   </div>
 
 </div>
