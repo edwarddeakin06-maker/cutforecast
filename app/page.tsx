@@ -44,7 +44,7 @@ export default function Home() {
   const [bodyFat, setBodyFat] = useState("");
   const [trainingDays, setTrainingDays] = useState("");
   const [goalSpeed, setGoalSpeed] = useState("moderate");
-
+  const [stepTarget, setStepTarget] = useState<number | null>(null);
   const [results, setResults] = useState<ResultsType | null>(null);
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [targetBodyFat, setTargetBodyFat] = useState("");
@@ -93,6 +93,12 @@ export default function Home() {
     let dailyDeficit = 500;
     if (goalSpeed === "slow") dailyDeficit = 300;
     if (goalSpeed === "aggressive") dailyDeficit = 700;
+    let steps = 8000;
+    if (goalSpeed === "slow") steps = 7000;
+    if (goalSpeed === "moderate") steps = 9000;
+    if (goalSpeed === "aggressive") steps = 11000;
+
+    setStepTarget(steps);
 
     const weeklyLossKg = (dailyDeficit * 7) / 7700;
     const weeksToGoal = Math.max(
@@ -390,7 +396,7 @@ useEffect(() => {
             <p>Protein: {results ? results.proteinTarget : "--"} g/day</p>
             <p>Target Body Fat: {results ? results.targetBF : "--"}%</p>
             <p>Time to Goal: {results ? results.weeksToGoal : "--"} weeks</p>
-
+            <p>Daily steps target: {stepTarget ? stepTarget : "--"} steps/day</p>
             {results && (
             <p className="text-zinc-400 text-sm">
             Maintenance calories after goal: ~{Math.round(results.suggestedCalories + 500)} kcal
@@ -560,6 +566,7 @@ pointRadius: 0
         <p>Calories: {results.suggestedCalories} kcal</p>
         <p>Protein: {results.proteinTarget} g/day</p>
         <p>Goal Date: {goalDate}</p>
+        <p>Steps: {stepTarget} / day</p>
 
         <p className="text-xs text-zinc-400 mt-3">
         Generated with CutForecast
