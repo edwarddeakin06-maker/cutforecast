@@ -15,9 +15,9 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement);
 const hoverLine = {
   id: "hoverLine",
   afterDraw(chart: any) {
-    if (chart.tooltip?._active?.length) {
+    if (chart.tooltip && chart.tooltip.dataPoints?.length) {
       const ctx = chart.ctx;
-      const activePoint = chart.tooltip._active[0];
+      const activePoint = chart.tooltip.dataPoints[0];
       const x = activePoint.element.x;
       const topY = chart.scales.y.top;
       const bottomY = chart.scales.y.bottom;
@@ -516,6 +516,10 @@ ref={chartRef}
 plugins={[hoverLine]}
 options={{
 responsive: true,
+interaction: {
+mode: "index",
+intersect: false
+},
 plugins: {
 legend: {
 display: true,
