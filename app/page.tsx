@@ -353,7 +353,7 @@ useEffect(() => {
   try {
     const canvas = await html2canvas(shareCardRef.current, {
       backgroundColor: "#18181b",
-      scale: 2,
+      scale: 3,
       useCORS: true
     });
 
@@ -571,12 +571,16 @@ useEffect(() => {
         )}
 
         {/* 🔥 GRAPH (always visible) */}
-        <div className="bg-white text-black p-6 rounded-xl w-full">
+        <div ref={shareCardRef} className="bg-white text-black p-6 rounded-xl w-full">
+          <p className="text-center text-xs text-gray-500 mb-2">
+  Generated with CutForecast.com
+</p>
           <div
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
           >
+           
             <Line
 ref={chartRef}
 plugins={[hoverLine]}
@@ -657,38 +661,28 @@ pointRadius: 0
             </p>
             )}
         
+        
+        </div>
+        </div>
         {results && (
-        <div className="mt-6 text-center">
+  <div className="mt-6 text-center">
 
-        <div
-        ref={shareCardRef}
-        className="bg-zinc-900 text-white p-6 rounded-xl max-w-sm mx-auto"
->
-        <h3 className="text-xl font-bold mb-2">CutForecast Plan</h3>
+    <div
+      
+      className="bg-zinc-900 text-white p-6 rounded-xl max-w-sm mx-auto"
+    >
+      ...
+    </div>
 
-        <p>Start Weight: {weight} kg</p>
-        <p>Goal Body Fat: {results.targetBF}%</p>
-        <p>Calories: {results.suggestedCalories} kcal</p>
-        <p>Protein: {results.proteinTarget} g/day</p>
-        <p>Goal Date: {goalDate}</p>
-        <p>Steps: {stepTarget} / day</p>
+    <button
+      onClick={downloadShareImage}
+      className="mt-4 bg-blue-500 px-5 py-2 rounded font-bold cursor-pointer"
+    >
+      Download Share Image
+    </button>
 
-        <p className="text-xs text-zinc-400 mt-3">
-        Generated with CutForecast
-        </p>
-        </div>
-
-        <button
-        onClick={downloadShareImage}
-        className="mt-4 bg-blue-500 px-5 py-2 rounded font-bold"
-        >
-        Download Share Image
-        </button>
-
-        </div>
-        )}
-        </div>
-        </div>
+  </div>
+)}
         {/* 🔥 SEO */}
         <div className="text-zinc-400 text-sm space-y-6 max-w-3xl mx-auto">
 
