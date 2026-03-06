@@ -348,22 +348,31 @@ useEffect(() => {
 
   const handleMouseUp = () => setDraggingIndex(null);
 const downloadShareImage = async () => {
-  if (!shareCardRef.current) return;
+  const element = shareCardRef.current;
+
+  if (!element) {
+    console.error("Share card not found");
+    return;
+  }
 
   try {
-    const canvas = await html2canvas(shareCardRef.current, {
-      scale: 3,
+    const canvas = await html2canvas(element, {
       backgroundColor: "#18181b",
-      useCORS: true
+      scale: 3
     });
 
-    const link = document.createElement("a");
-    link.download = "cutforecast-plan.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+    const image = canvas.toDataURL("image/png");
 
-  } catch (err) {
-    console.error("Share image failed:", err);
+    const link = document.createElement("a");
+    link.href = image;
+    link.download = "cutforecast-plan.png";
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+  } catch (error) {
+    console.error("Error generating image:", error);
   }
 };
   return (
@@ -687,9 +696,9 @@ pointRadius: 0
 </div>
 
     <button
-      onClick={downloadShareImage}
-      className="mt-4 bg-blue-500 px-5 py-2 rounded font-bold cursor-pointer"
-    >
+  onClick={() => downloadShareImage()}
+  className="mt-4 bg-blue-500 px-5 py-2 rounded font-bold cursor-pointer"
+>
       Download Share Image
     </button>
 
