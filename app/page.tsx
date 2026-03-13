@@ -82,6 +82,10 @@ export default function Home() {
   const [height, setHeight] = useState("");
   const [age, setAge] = useState("");
   const [unitSystem, setUnitSystem] = useState("metric");
+  const [weightSt, setWeightSt] = useState("");
+  const [weightLb, setWeightLb] = useState("");
+  const [heightFt, setHeightFt] = useState("");
+  const [heightIn, setHeightIn] = useState("");
   const [goalDate, setGoalDate] = useState<string | null>(null);
   const [milestones, setMilestones] = useState<number[]>([]);
   const [cheatImpact, setCheatImpact] = useState<number | null>(null);
@@ -103,15 +107,13 @@ export default function Home() {
 
   if (unitSystem === "imperial") {
 
-    const weightParts = weight.split(" ");
-    const st = Number(weightParts[0]) || 0;
-    const lb = Number(weightParts[1]) || 0;
+    const st = Number(weightSt) || 0;
+    const lb = Number(weightLb) || 0;
 
     w = (st * 14 + lb) * 0.453592;
 
-    const heightParts = height.split(" ");
-    const ft = Number(heightParts[0]) || 0;
-    const inch = Number(heightParts[1]) || 0;
+    const ft = Number(heightFt) || 0;
+    const inch = Number(heightIn) || 0;
 
     h = (ft * 12 + inch) * 2.54;
   }
@@ -350,17 +352,45 @@ const downloadShareImage = () => {
 
 
 
-            <input
-              type="text"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              placeholder={
-              unitSystem === "metric"
-              ? "Enter your weight (kg)"
-              : "Enter weight (st lb) e.g. 12 6"
-              }
-              className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
-            />
+            {unitSystem === "metric" ? (
+
+<input
+type="number"
+value={weight}
+onChange={(e) => setWeight(e.target.value)}
+placeholder="Enter your weight (kg)"
+className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
+/>
+
+) : (
+
+<div className="flex gap-2">
+
+<select
+value={weightSt}
+onChange={(e) => setWeightSt(e.target.value)}
+className="w-full p-3 bg-zinc-800 rounded"
+>
+<option value="">st</option>
+{Array.from({ length: 30 }, (_, i) => (
+<option key={i+5} value={i+5}>{i+5} st</option>
+))}
+</select>
+
+<select
+value={weightLb}
+onChange={(e) => setWeightLb(e.target.value)}
+className="w-full p-3 bg-zinc-800 rounded"
+>
+<option value="">lb</option>
+{Array.from({ length: 14 }, (_, i) => (
+<option key={i} value={i}>{i} lb</option>
+))}
+</select>
+
+</div>
+
+)}
 
             <input
               type="number"
@@ -398,17 +428,45 @@ const downloadShareImage = () => {
             />
 
 
-            <input
-            type="text"
-            value={height}
-            onChange={(e) => setHeight(e.target.value)}
-            placeholder={
-            unitSystem === "metric"
-            ? "Enter your height (cm)"
-            : "Enter height (ft in) e.g. 5 11"
-            }
-            className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
-            />
+            {unitSystem === "metric" ? (
+
+<input
+type="number"
+value={height}
+onChange={(e) => setHeight(e.target.value)}
+placeholder="Enter your height (cm)"
+className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
+/>
+
+) : (
+
+<div className="flex gap-2">
+
+<select
+value={heightFt}
+onChange={(e) => setHeightFt(e.target.value)}
+className="w-full p-3 bg-zinc-800 rounded"
+>
+<option value="">ft</option>
+{Array.from({ length: 8 }, (_, i) => (
+<option key={i+3} value={i+3}>{i+3} ft</option>
+))}
+</select>
+
+<select
+value={heightIn}
+onChange={(e) => setHeightIn(e.target.value)}
+className="w-full p-3 bg-zinc-800 rounded"
+>
+<option value="">in</option>
+{Array.from({ length: 12 }, (_, i) => (
+<option key={i} value={i}>{i} in</option>
+))}
+</select>
+
+</div>
+
+)}
 
             <input
             type="text"
