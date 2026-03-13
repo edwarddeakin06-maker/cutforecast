@@ -81,7 +81,8 @@ export default function Home() {
   const [sex, setSex] = useState("");
   const [height, setHeight] = useState("");
   const [age, setAge] = useState("");
-  const [unitSystem, setUnitSystem] = useState("metric");
+  const [weightUnit, setWeightUnit] = useState("kg");
+  const [heightUnit, setHeightUnit] = useState("cm");
   const [weightSt, setWeightSt] = useState("");
   const [weightLb, setWeightLb] = useState("");
   const [heightFt, setHeightFt] = useState("");
@@ -105,18 +106,25 @@ export default function Home() {
   let w = Number(weight);
   let h = Number(height);
 
-  if (unitSystem === "imperial") {
+  // weight conversion
+if (weightUnit === "st") {
 
-    const st = Number(weightSt) || 0;
-    const lb = Number(weightLb) || 0;
+  const st = Number(weightSt) || 0;
+  const lb = Number(weightLb) || 0;
 
-    w = (st * 14 + lb) * 0.453592;
+  w = (st * 14 + lb) * 0.453592;
 
-    const ft = Number(heightFt) || 0;
-    const inch = Number(heightIn) || 0;
+}
 
-    h = (ft * 12 + inch) * 2.54;
-  }
+// height conversion
+if (heightUnit === "ft") {
+
+  const ft = Number(heightFt) || 0;
+  const inch = Number(heightIn) || 0;
+
+  h = (ft * 12 + inch) * 2.54;
+
+}
 
   const bf = Number(bodyFat) / 100;
   const a = Number(age);
@@ -198,7 +206,8 @@ setCheatImpact(null);
 };
   useEffect(() => {
   if (navigator.language === "en-GB") {
-    setUnitSystem("imperial");
+    setWeightUnit("st");
+    setHeightUnit("ft");
   }
 }, []);
 useEffect(() => {
@@ -386,7 +395,12 @@ const downloadShareImage = () => {
 
     ctx.font = "22px sans-serif";
 
-    ctx.fillText(`Start Weight: ${weight} kg`, 50, 470);
+    const startWeightText =
+  weightUnit === "kg"
+    ? `${weight} kg`
+    : `${weightSt} st ${weightLb} lb`;
+
+ctx.fillText(`Start Weight: ${startWeightText}`, 50, 470);
 
     if (results) {
       ctx.fillText(`Goal Body Fat: ${results.targetBF}%`, 50, 510);
@@ -424,20 +438,23 @@ const downloadShareImage = () => {
           {/* 🔥 INPUTS */}
           <div className="bg-zinc-900 p-4 rounded-xl space-y-3">
             <h2 className="text-xl font-semibold">Your Stats</h2>
-            <select
-            value={unitSystem}
-            onChange={(e) => setUnitSystem(e.target.value)}
-            className="w-full p-3 bg-zinc-800 rounded text-gray-300"
-            >
-            <option value="metric">Metric (kg / cm)</option>
-            <option value="imperial">Imperial (st / lb, ft / in)</option>
-            </select>
+            
 
 
-            <p className="text-sm text-zinc-500">
-Weight {unitSystem === "metric" ? "(kg)" : "(st / lb)"}
-</p>
-            {unitSystem === "metric" ? (
+          <div className="flex justify-between items-center">
+<p className="text-sm text-zinc-500">Weight</p>
+
+<select
+value={weightUnit}
+onChange={(e) => setWeightUnit(e.target.value)}
+className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs"
+>
+<option value="kg">kg</option>
+<option value="st">st / lb</option>
+</select>
+</div>
+
+            {weightUnit === "kg" ? (
 
 <input
 type="number"
@@ -514,9 +531,20 @@ className="w-full p-3 bg-zinc-800 rounded"
             />
 
             <p className="text-sm text-zinc-500 mt-2">
-Height {unitSystem === "metric" ? "(cm)" : "(ft / in)"}
+<div className="flex justify-between items-center mt-2">
+<p className="text-sm text-zinc-500">Height</p>
+
+<select
+value={heightUnit}
+onChange={(e) => setHeightUnit(e.target.value)}
+className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs"
+>
+<option value="cm">cm</option>
+<option value="ft">ft / in</option>
+</select>
+</div>
 </p>
-            {unitSystem === "metric" ? (
+            {heightUnit === "cm" ? (
 
 <input
 type="number"
@@ -578,7 +606,7 @@ className="w-full p-3 bg-zinc-800 rounded"
             <button
               onClick={() => {
 
-  if (unitSystem === "metric") {
+  if (weightUnit === "kg") {
 
     if (!weight || !height || !bodyFat || !sex || !age) {
       return alert("Please fill in all fields");
@@ -731,7 +759,10 @@ return `Week ${week}`;
 label: (context) => {
 const weight = context.raw;
 const date = context.label;
-return [`Date: ${date}`, `Weight: ${weight} kg`];
+return [
+  `Date: ${date}`,
+  `Weight: ${weightUnit === "kg" ? weight + " kg" : (weight * 2.20462).toFixed(1) + " lb"}`
+];
 }
 }
 }
@@ -740,7 +771,7 @@ scales: {
 y: {
 title: {
 display: true,
-text: unitSystem === "metric" ? "Weight (kg)" : "Weight (lb)"
+text: weightUnit === "kg" ? "Weight (kg)" : "Weight (lb)"
 }
 },
 x: {
@@ -758,7 +789,9 @@ dayjs().add(i, "week").format("MMM D")
 datasets: [
 {
 label: "Predicted Weight",
-data: results?.trend || emptyTrend,
+data: (results?.trend || emptyTrend).map((w) =>
+  weightUnit === "kg" ? w : parseFloat((w * 2.20462).toFixed(1))
+),
 borderColor: "red",
 tension: 0.4,
 pointRadius: 5,
@@ -769,7 +802,11 @@ pointHitRadius: 12,
 {
 label: "Goal Weight",
 data: (results?.trend || emptyTrend).map(() =>
-results ? Number(results.targetWeight) : 0
+  results
+    ? weightUnit === "kg"
+      ? Number(results.targetWeight)
+      : parseFloat((Number(results.targetWeight) * 2.20462).toFixed(1))
+    : 0
 ),
 borderColor: "green",
 borderDash: [5,5],
@@ -800,7 +837,11 @@ pointRadius: 0
 >
   <h3 className="text-xl font-bold">CutForecast Plan</h3>
 
-  <p>Start Weight: {weight} kg</p>
+  <p>
+Start Weight: {weightUnit === "kg"
+  ? `${weight} kg`
+  : `${weightSt} st ${weightLb} lb`}
+</p>
 
   {results && (
     <>
