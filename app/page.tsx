@@ -52,16 +52,39 @@ type ResultsType = {
   targetBF: number;
 };
 
-const generateTrend = (current: number, target: number, weeks: number) => {
+const generateTrend = (
+  startWeight: number,
+  targetWeight: number,
+  weeks: number
+) => {
+
   const arr: number[] = [];
-  let w = current;
-  const loss = (current - target) / weeks;
+
+  let weight = startWeight;
 
   for (let i = 0; i < weeks; i++) {
-    const fluct = (Math.random() - 0.5) * 0.5;
-    w -= loss;
-    w += fluct;
-    arr.push(parseFloat(w.toFixed(1)));
+
+    const progress = i / weeks;
+
+    // metabolic adaptation (up to ~15%)
+    const adaptation = 1 - progress * 0.15;
+
+    // smaller body burns fewer calories
+    const bodyWeightEffect = weight / startWeight;
+
+    // estimated weekly fat loss
+    const weeklyLoss =
+      ((startWeight - targetWeight) / weeks) *
+      adaptation *
+      bodyWeightEffect;
+
+    // realistic fluctuation
+    const fluctuation = (Math.random() - 0.5) * 0.35;
+
+    weight -= weeklyLoss;
+    weight += fluctuation;
+
+    arr.push(parseFloat(weight.toFixed(1)));
   }
 
   return arr;
@@ -236,9 +259,22 @@ useEffect(() => {
 const recalculateFromCustom = () => {
   if (!results || !customCalories) return;
 
-  const w = Number(weight);
-  const bf = Number(bodyFat) / 100;
-  const h = Number(height);
+  let w = Number(weight);
+let h = Number(height);
+
+if (weightUnit === "st") {
+  const st = Number(weightSt) || 0;
+  const lb = Number(weightLb) || 0;
+  w = (st * 14 + lb) * 0.453592;
+}
+
+if (heightUnit === "ft") {
+  const ft = Number(heightFt) || 0;
+  const inch = Number(heightIn) || 0;
+  h = (ft * 12 + inch) * 2.54;
+}
+
+const bf = Number(bodyFat) / 100;
   const a = Number(age);
 
   const LBM = w * (1 - bf);
@@ -540,8 +576,7 @@ className="w-full p-3 bg-zinc-800 rounded"
               className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
             />
 
-            <p className="text-sm text-zinc-500 mt-2">
-<div className="flex justify-between items-center mt-2">
+            <div className="flex justify-between items-center mt-2">
 <p className="text-sm text-zinc-500">Height</p>
 
 <select
@@ -553,7 +588,7 @@ className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs"
 <option value="ft">ft / in</option>
 </select>
 </div>
-</p>
+
             {heightUnit === "cm" ? (
 
 <input
@@ -845,14 +880,43 @@ data: (results?.trend || emptyTrend).map(() =>
 borderColor: "green",
 borderDash: [5,5],
 pointRadius: 0
+},
+{
+label: "If you tighten the deficit",
+data: (results?.trend || emptyTrend).map((w, i) => {
+
+  if (!results) return w;
+
+  const plateauWeek = Math.round(results.weeksToGoal * 0.7);
+
+  if (i < plateauWeek) return w;
+
+  // how much extra fat loss depends on your slider deficit
+  const extraDeficit = dailyDeficitValue
+    ? dailyDeficitValue * 0.00013
+    : 0.05;
+
+  const extraLoss = (i - plateauWeek) * extraDeficit;
+
+  return parseFloat((w - extraLoss).toFixed(1));
+
+}),
+borderColor: "blue",
+borderDash: [6,6],
+tension: 0.4,
+pointRadius: 0
 }
 ]
+
 }}
-/>
-            <p className="text-sm text-gray-600 mt-3 text-center">
+
+/>            <p className="text-sm text-gray-600 mt-3 text-center">
             Try dragging the points to simulate cheat days — the rest of the plan will adjust.
             </p>
-
+            <p className="text-xs text-gray-500 text-center mt-2">
+            Weight loss often slows due to metabolic adaptation. 
+            The blue line shows what may happen if you increase your deficit later in the cut.
+            </p>
             {cheatImpact && (
             <p className="text-red-400 text-center mt-2">
             This change may delay your goal by about {cheatImpact} days.
