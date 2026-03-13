@@ -314,7 +314,7 @@ useEffect(() => {
   if (results && customCalories) {
     recalculateFromCustom();
   }
-}, [customCalories]);
+}, [customCalories, customSteps]);
 
   // 🔥 Dragging logic
   const handleMouseDown = (e: any) => {
