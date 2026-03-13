@@ -789,7 +789,20 @@ className="w-full p-3 bg-zinc-800 rounded"
         <p className="font-semibold text-white">Projected milestones</p>
         {milestones.map((w, i) => {
   const week = Math.round(((i + 1) / milestones.length) * (results?.weeksToGoal || 1));
-  return <p key={i}>Week {week}: {w} kg</p>;
+
+  let displayWeight = "";
+
+  if (weightUnit === "kg") {
+    displayWeight = `${w} kg`;
+  } else {
+    const totalLb = w * 2.20462;
+    const st = Math.floor(totalLb / 14);
+    const lb = Math.round(totalLb % 14);
+
+    displayWeight = `${st} st ${lb} lb`;
+  }
+
+  return <p key={i}>Week {week}: {displayWeight}</p>;
 })}
         </div>
         )}
@@ -828,9 +841,10 @@ return `Week ${week}`;
 label: (context) => {
 const weight = Number(context.raw);
 const date = context.label;
+
 return [
   `Date: ${date}`,
-  `Weight: ${weightUnit === "kg" ? weight + " kg" : (weight * 2.20462).toFixed(1) + " lb"}`
+  `Weight: ${weight} ${weightUnit === "kg" ? "kg" : "lb"}`
 ];
 }
 }
