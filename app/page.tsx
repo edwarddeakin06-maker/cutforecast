@@ -252,7 +252,12 @@ const recalculateFromCustom = () => {
   else if (Number(trainingDays) <= 5) activityMultiplier = 1.55;
   else activityMultiplier = 1.725;
 
-  const TDEE = BMR * activityMultiplier;
+  let TDEE = BMR * activityMultiplier;
+
+const steps = customSteps || stepTarget || 8000;
+const stepBurn = (steps - 8000) * 0.04;
+
+TDEE += stepBurn;
 
   const calories = Number(customCalories);
 
