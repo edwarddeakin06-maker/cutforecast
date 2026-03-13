@@ -120,7 +120,82 @@ export default function Home() {
 
   const bf = Number(bodyFat) / 100;
   const a = Number(age);
-  };
+  let BMR = 10 * w + 6.25 * h - 5 * a;
+
+if (sex === "male") BMR += 5;
+else BMR -= 161;
+
+let activityMultiplier = 1.2;
+
+if (Number(trainingDays) <= 3) activityMultiplier = 1.375;
+else if (Number(trainingDays) <= 5) activityMultiplier = 1.55;
+else activityMultiplier = 1.725;
+
+const TDEE = BMR * activityMultiplier;
+
+setMaintenanceCalories(Math.round(TDEE));
+
+let dailyDeficit = 500;
+
+if (goalSpeed === "slow") dailyDeficit = 300;
+if (goalSpeed === "aggressive") dailyDeficit = 700;
+
+let steps = 8000;
+
+if (goalSpeed === "slow") steps = 7000;
+if (goalSpeed === "moderate") steps = 9000;
+if (goalSpeed === "aggressive") steps = 11000;
+
+setStepTarget(steps);
+
+const LBM = w * (1 - bf);
+
+const targetBF = Number(targetBodyFat) || 12;
+const tbf = targetBF / 100;
+
+const targetWeight = LBM / (1 - tbf);
+
+const weeklyLossKg = (dailyDeficit * 7) / 7700;
+
+const weeksToGoal = Math.max(
+  1,
+  Math.ceil((w - targetWeight) / weeklyLossKg)
+);
+
+const trend = generateTrend(w, targetWeight, weeksToGoal);
+
+const proteinTarget = Math.round(LBM * 2.2);
+
+const suggestedCalories = Math.round(TDEE - dailyDeficit);
+
+setResults({
+  targetWeight: targetWeight.toFixed(1),
+  weeksToGoal,
+  trend,
+  proteinTarget,
+  suggestedCalories,
+  targetBF,
+});
+
+setCustomCalories(String(suggestedCalories));
+
+const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
+
+setGoalDate(goal);
+
+const milestoneCount = 3;
+
+const milestoneWeeks = Array.from(
+  { length: milestoneCount },
+  (_, i) => Math.round(((i + 1) / milestoneCount) * weeksToGoal)
+);
+
+const milestoneWeights = milestoneWeeks.map((w) => trend[w - 1]);
+
+setMilestones(milestoneWeights);
+
+setCheatImpact(null);
+};
   useEffect(() => {
   if (navigator.language === "en-GB") {
     setUnitSystem("imperial");
@@ -349,9 +424,19 @@ const downloadShareImage = () => {
           {/* 🔥 INPUTS */}
           <div className="bg-zinc-900 p-4 rounded-xl space-y-3">
             <h2 className="text-xl font-semibold">Your Stats</h2>
+            <select
+            value={unitSystem}
+            onChange={(e) => setUnitSystem(e.target.value)}
+            className="w-full p-3 bg-zinc-800 rounded text-gray-300"
+            >
+            <option value="metric">Metric (kg / cm)</option>
+            <option value="imperial">Imperial (st / lb, ft / in)</option>
+            </select>
 
 
-
+            <p className="text-sm text-zinc-500">
+Weight {unitSystem === "metric" ? "(kg)" : "(st / lb)"}
+</p>
             {unitSystem === "metric" ? (
 
 <input
@@ -391,7 +476,7 @@ className="w-full p-3 bg-zinc-800 rounded"
 </div>
 
 )}
-
+            <p className="text-sm text-zinc-500">Body Fat %</p>
             <input
               type="number"
               value={bodyFat}
@@ -399,7 +484,7 @@ className="w-full p-3 bg-zinc-800 rounded"
               placeholder="Enter body fat %"
               className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
             />
-
+            <p className="text-sm text-zinc-500">Training Days</p>
             <input
               type="number"
               value={trainingDays}
@@ -409,6 +494,7 @@ className="w-full p-3 bg-zinc-800 rounded"
 
 
             />
+            <p className="text-sm text-zinc-500">Sex</p>
             <select
             value={sex}
             onChange={(e) => setSex(e.target.value)}
@@ -418,7 +504,7 @@ className="w-full p-3 bg-zinc-800 rounded"
             <option value="male">Male</option>
             <option value="female">Female</option>
             </select>
-
+            <p className="text-sm text-zinc-500">Age</p>
             <input
               type="number"
               value={age}
@@ -427,7 +513,9 @@ className="w-full p-3 bg-zinc-800 rounded"
               className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
             />
 
-
+            <p className="text-sm text-zinc-500 mt-2">
+Height {unitSystem === "metric" ? "(cm)" : "(ft / in)"}
+</p>
             {unitSystem === "metric" ? (
 
 <input
@@ -489,13 +577,24 @@ className="w-full p-3 bg-zinc-800 rounded"
 
             <button
               onClick={() => {
-                if (!weight || !bodyFat || !sex || !height || !age) {
-                  return alert("Please fill in all fields");
-                }
-                else {
-                  calculate();
-                }
-              }}
+
+  if (unitSystem === "metric") {
+
+    if (!weight || !height || !bodyFat || !sex || !age) {
+      return alert("Please fill in all fields");
+    }
+
+  } else {
+
+    if (!weightSt || !heightFt || !bodyFat || !sex || !age) {
+      return alert("Please fill in all fields");
+    }
+
+  }
+
+  calculate();
+
+}}
               className="w-full py-3 bg-green-500 rounded font-bold text-black"
             >
               Calculate
@@ -523,7 +622,7 @@ className="w-full p-3 bg-zinc-800 rounded"
             You will reach {results.targetBF}% body fat in approximately {results.weeksToGoal} weeks.
             </p>
             {goalDate && (
-            <p className="text-sm text-zinc-400">
+            <p className="text-sm text-zinc-500">
             Estimated goal date: {goalDate}
             </p>
             )}
@@ -538,7 +637,7 @@ className="w-full p-3 bg-zinc-800 rounded"
 
           <div className="space-y-3">
 
-  <div className="flex justify-between text-sm text-zinc-400">
+  <div className="flex justify-between text-sm text-zinc-500">
     <span>Calories per day</span>
     <span className="font-semibold text-white">
       {customCalories || results?.suggestedCalories} kcal
@@ -589,7 +688,7 @@ className="w-full p-3 bg-zinc-800 rounded"
           </div>
         </section>
         {milestones.length > 0 && (
-        <div className="mt-3 text-sm text-zinc-400">
+        <div className="mt-3 text-sm text-zinc-500">
         <p className="font-semibold text-white">Projected milestones</p>
         {milestones.map((w, i) => {
   const week = Math.round(((i + 1) / milestones.length) * (results?.weeksToGoal || 1));
