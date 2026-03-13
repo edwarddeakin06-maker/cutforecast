@@ -81,6 +81,7 @@ export default function Home() {
   const [sex, setSex] = useState("");
   const [height, setHeight] = useState("");
   const [age, setAge] = useState("");
+  const [unitSystem, setUnitSystem] = useState("metric");
   const [goalDate, setGoalDate] = useState<string | null>(null);
   const [milestones, setMilestones] = useState<number[]>([]);
   const [cheatImpact, setCheatImpact] = useState<number | null>(null);
@@ -96,111 +97,52 @@ export default function Home() {
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
 
   const calculate = () => {
-    const w = Number(weight);
-    const bf = Number(bodyFat) / 100;
-    const h = Number(height);
-    const a = Number(age);
 
-    if (!w || !bf || !h || !a) return alert("Please fill in your stats");
+  let w = Number(weight);
+  let h = Number(height);
 
-    const targetBF = Number(targetBodyFat) || 12;
-    const tbf = targetBF / 100;
+  if (unitSystem === "imperial") {
 
-    const LBM = w * (1 - bf);
-    const targetWeight = LBM / (1 - tbf);
+    const weightParts = weight.split(" ");
+    const st = Number(weightParts[0]) || 0;
+    const lb = Number(weightParts[1]) || 0;
 
-    let BMR = 10 * w + 6.25 * h - 5 * a;
-    if (sex === "male") BMR += 5;
-    else BMR -= 161;
+    w = (st * 14 + lb) * 0.453592;
 
-    let activityMultiplier = 1.2;
-    if (Number(trainingDays) <= 3) activityMultiplier = 1.375;
-    else if (Number(trainingDays) <= 5) activityMultiplier = 1.55;
-    else activityMultiplier = 1.725;
+    const heightParts = height.split(" ");
+    const ft = Number(heightParts[0]) || 0;
+    const inch = Number(heightParts[1]) || 0;
 
-    const TDEE = BMR * activityMultiplier;
-    setMaintenanceCalories(Math.round(TDEE));
-    let dailyDeficit = 500;
-    if (goalSpeed === "slow") dailyDeficit = 300;
-    if (goalSpeed === "aggressive") dailyDeficit = 700;
-    let steps = 8000;
-    if (goalSpeed === "slow") steps = 7000;
-    if (goalSpeed === "moderate") steps = 9000;
-    if (goalSpeed === "aggressive") steps = 11000;
-
-    setStepTarget(steps);
-
-    let proteinAdjustment = 1;
-
-if (customProtein && results && Number(customProtein) < results.proteinTarget * 0.7) {
-  proteinAdjustment = 0.85;
-}
-
-const weeklyLossKg = ((dailyDeficit * 7) / 7700) * proteinAdjustment;
-    const weeksToGoal = Math.max(
-      1,
-      Math.ceil((w - targetWeight) / weeklyLossKg)
-    );
-    
-
-    const trend = generateTrend(w, targetWeight, weeksToGoal);
-    let finalWeek = weeksToGoal;
-
-for (let i = 0; i < trend.length; i++) {
-  if (trend[i] <= targetWeight) {
-    finalWeek = i + 1;
-    break;
+    h = (ft * 12 + inch) * 2.54;
   }
-}
 
-const trimmedTrend = trend.slice(0, finalWeek);
-    const proteinTarget = Math.round(LBM * 2.2);
-    const suggestedCalories = Math.round(TDEE - dailyDeficit);
-
-    setResults({
-  targetWeight: targetWeight.toFixed(1),
-  weeksToGoal: finalWeek,
-  trend: trimmedTrend,
-  proteinTarget,
-  suggestedCalories,
-  targetBF,
-  
-});
-
-   
-    setCustomCalories(String(suggestedCalories));
-
-    const goal = dayjs().add(finalWeek, "week").format("MMM D YYYY");
-    setGoalDate(goal);
-
-    const milestoneCount = 3;
-
-const milestoneWeeks = Array.from(
-  { length: milestoneCount },
-  (_, i) => Math.round(((i + 1) / milestoneCount) * finalWeek)
-);
-
-const milestoneWeights = milestoneWeeks.map((w) => trimmedTrend[w - 1]);
-
-    setMilestones(milestoneWeights);
-    setCheatImpact(null);
-    localStorage.setItem(
-  "cutforecast-data",
-  JSON.stringify({
-    weight,
-    bodyFat,
-    trainingDays,
-    sex,
-    height,
-    age,
-    goalSpeed,
-    targetBodyFat,
-    customCalories,
-    customProtein
-  })
-);
+  const bf = Number(bodyFat) / 100;
+  const a = Number(age);
   };
-  const recalculateFromCustom = () => {
+  useEffect(() => {
+  if (navigator.language === "en-GB") {
+    setUnitSystem("imperial");
+  }
+}, []);
+useEffect(() => {
+  const saved = localStorage.getItem("cutforecast-data");
+
+  if (!saved) return;
+
+  const data = JSON.parse(saved);
+
+  if (data.weight) setWeight(data.weight);
+  if (data.bodyFat) setBodyFat(data.bodyFat);
+  if (data.trainingDays) setTrainingDays(data.trainingDays);
+  if (data.sex) setSex(data.sex);
+  if (data.height) setHeight(data.height);
+  if (data.age) setAge(data.age);
+  if (data.goalSpeed) setGoalSpeed(data.goalSpeed);
+  if (data.targetBodyFat) setTargetBodyFat(data.targetBodyFat);
+  if (data.customCalories) setCustomCalories(data.customCalories);
+  if (data.customProtein) setCustomProtein(data.customProtein);
+}, []);
+const recalculateFromCustom = () => {
   if (!results || !customCalories) return;
 
   const w = Number(weight);
@@ -230,11 +172,14 @@ const milestoneWeights = milestoneWeeks.map((w) => trimmedTrend[w - 1]);
 
   const dailyDeficit = TDEE - calories;
   setDailyDeficitValue(Math.round(dailyDeficit));
+
   const deficitLevel =
-  dailyDeficit < 400 ? "green" :
-  dailyDeficit < 700 ? "orange" :
-  "red";
+    dailyDeficit < 400 ? "green" :
+    dailyDeficit < 700 ? "orange" :
+    "red";
+
   setSliderColor(deficitLevel);
+
   const weeklyLossKg = (dailyDeficit * 7) / 7700;
   setWeeklyLossValue(Number(weeklyLossKg.toFixed(2)));
 
@@ -261,39 +206,19 @@ const milestoneWeights = milestoneWeeks.map((w) => trimmedTrend[w - 1]);
   });
 
   const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
-setGoalDate(goal);
+  setGoalDate(goal);
 
-const milestoneCount = 3;
+  const milestoneCount = 3;
 
-const milestoneWeeks = Array.from(
-  { length: milestoneCount },
-  (_, i) => Math.round(((i + 1) / milestoneCount) * weeksToGoal)
-);
+  const milestoneWeeks = Array.from(
+    { length: milestoneCount },
+    (_, i) => Math.round(((i + 1) / milestoneCount) * weeksToGoal)
+  );
 
-const milestoneWeights = milestoneWeeks.map((w) => trend[w - 1]);
+  const milestoneWeights = milestoneWeeks.map((w) => trend[w - 1]);
 
-setMilestones(milestoneWeights);
-
-  
+  setMilestones(milestoneWeights);
 };
-useEffect(() => {
-  const saved = localStorage.getItem("cutforecast-data");
-
-  if (!saved) return;
-
-  const data = JSON.parse(saved);
-
-  if (data.weight) setWeight(data.weight);
-  if (data.bodyFat) setBodyFat(data.bodyFat);
-  if (data.trainingDays) setTrainingDays(data.trainingDays);
-  if (data.sex) setSex(data.sex);
-  if (data.height) setHeight(data.height);
-  if (data.age) setAge(data.age);
-  if (data.goalSpeed) setGoalSpeed(data.goalSpeed);
-  if (data.targetBodyFat) setTargetBodyFat(data.targetBodyFat);
-  if (data.customCalories) setCustomCalories(data.customCalories);
-  if (data.customProtein) setCustomProtein(data.customProtein);
-}, []);
 useEffect(() => {
   if (results && customCalories) {
     recalculateFromCustom();
@@ -426,10 +351,14 @@ const downloadShareImage = () => {
 
 
             <input
-              type="number"
+              type="text"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
-              placeholder="Enter your weight (kg)"
+              placeholder={
+              unitSystem === "metric"
+              ? "Enter your weight (kg)"
+              : "Enter weight (st lb) e.g. 12 6"
+              }
               className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
             />
 
@@ -470,10 +399,14 @@ const downloadShareImage = () => {
 
 
             <input
-            type="number"
+            type="text"
             value={height}
             onChange={(e) => setHeight(e.target.value)}
-            placeholder="Enter your height (cm)"
+            placeholder={
+            unitSystem === "metric"
+            ? "Enter your height (cm)"
+            : "Enter height (ft in) e.g. 5 11"
+            }
             className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
             />
 
@@ -650,7 +583,7 @@ scales: {
 y: {
 title: {
 display: true,
-text: "Weight (kg)"
+text: unitSystem === "metric" ? "Weight (kg)" : "Weight (lb)"
 }
 },
 x: {
