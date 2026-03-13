@@ -757,7 +757,7 @@ const week = context[0].dataIndex + 1;
 return `Week ${week}`;
 },
 label: (context) => {
-const weight = context.raw;
+const weight = Number(context.raw);
 const date = context.label;
 return [
   `Date: ${date}`,
