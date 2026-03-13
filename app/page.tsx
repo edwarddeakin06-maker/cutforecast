@@ -896,23 +896,30 @@ borderDash: [5,5],
 pointRadius: 0
 },
 {
-label: "If you tighten the deficit",
+label: "If calorie deficit is increased later",
 data: (results?.trend || emptyTrend).map((w, i) => {
 
   if (!results) return w;
 
-  const plateauWeek = Math.round(results.weeksToGoal * 0.7);
+  const plateauWeek = Math.round(results.weeksToGoal * 0.6);
 
-  if (i < plateauWeek) return w;
+  let value = w;
 
-  // how much extra fat loss depends on your slider deficit
-  const extraDeficit = dailyDeficitValue
-    ? dailyDeficitValue * 0.00013
-    : 0.05;
+  if (i >= plateauWeek) {
 
-  const extraLoss = (i - plateauWeek) * extraDeficit;
+    const extraDeficit = dailyDeficitValue
+      ? dailyDeficitValue * 0.00013
+      : 0.05;
 
-  return parseFloat((w - extraLoss).toFixed(1));
+    const extraLoss = (i - plateauWeek) * extraDeficit;
+
+    value = w - extraLoss;
+  }
+
+  // convert to lb if needed
+  return weightUnit === "kg"
+    ? parseFloat(value.toFixed(1))
+    : parseFloat((value * 2.20462).toFixed(1));
 
 }),
 borderColor: "blue",
