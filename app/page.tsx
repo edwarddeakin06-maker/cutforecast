@@ -97,6 +97,7 @@ export default function Home() {
   const [sliderColor, setSliderColor] = useState("green");
   const [dailyDeficitValue, setDailyDeficitValue] = useState<number | null>(null);
   const [weeklyLossValue, setWeeklyLossValue] = useState<number | null>(null);
+  const [customSteps, setCustomSteps] = useState<number | null>(null);
 
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
@@ -139,7 +140,11 @@ if (Number(trainingDays) <= 3) activityMultiplier = 1.375;
 else if (Number(trainingDays) <= 5) activityMultiplier = 1.55;
 else activityMultiplier = 1.725;
 
-const TDEE = BMR * activityMultiplier;
+let TDEE = BMR * activityMultiplier;
+
+// step calorie burn adjustment
+const stepBurn = ((customSteps || stepTarget || 8000) - 8000) * 0.04;
+TDEE += stepBurn;
 
 setMaintenanceCalories(Math.round(TDEE));
 
@@ -155,7 +160,7 @@ if (goalSpeed === "moderate") steps = 9000;
 if (goalSpeed === "aggressive") steps = 11000;
 
 setStepTarget(steps);
-
+setCustomSteps(steps);
 const LBM = w * (1 - bf);
 
 const targetBF = Number(targetBodyFat) || 12;
@@ -662,7 +667,31 @@ className="w-full p-3 bg-zinc-800 rounded"
           <h3 className="text-lg font-semibold text-center">
           Adjust your diet
           </h3>
+          <div className="space-y-3 mt-4">
 
+  <div className="flex justify-between text-sm text-zinc-500">
+    <span>Daily steps</span>
+    <span className="font-semibold text-white">
+      {customSteps || stepTarget} steps
+    </span>
+  </div>
+
+  <input
+    type="range"
+    min="3000"
+    max="20000"
+    step="500"
+    value={customSteps || stepTarget || 8000}
+    onChange={(e) => setCustomSteps(Number(e.target.value))}
+    className="w-full h-2 bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+  />
+
+  <div className="flex justify-between text-xs text-zinc-500">
+    <span>3k</span>
+    <span>20k</span>
+  </div>
+
+</div>    
           <div className="space-y-3">
 
   <div className="flex justify-between text-sm text-zinc-500">
