@@ -473,7 +473,7 @@ ctx.fillText(`Start Weight: ${startWeightText}`, 50, 470);
     <main className="min-h-screen bg-zinc-950 text-white p-6">
       <div className="max-w-5xl mx-auto space-y-6">
 
-        <h1 className="text-5xl font-bold text-center">CutForecast</h1>
+        <h1 className="text-5xl font-bold text-center">Weight Loss Calculator</h1>
         <p className="text-center text-zinc-400 max-w-2xl mx-auto">
         Predict how long it will take to reach your goal body fat using calorie deficits,
         training frequency and realistic fat-loss modelling.
