@@ -988,23 +988,49 @@ Start Weight: {weightUnit === "kg"
 )}
         
         {/* 🔥 SEO */}
-        <div className="text-zinc-400 text-sm space-y-6 max-w-3xl mx-auto">
+        {/* 🔥 SEO */}
+<div className="text-zinc-400 text-sm space-y-6 max-w-3xl mx-auto">
 
-          <div>
-            <h2 className="text-white text-lg font-semibold">What is CutForecast?</h2>
-            <p>
-              CutForecast is a free fat loss calculator that helps you plan your weight loss journey.
-            </p>
-          </div>
+  <div>
+    <h2 className="text-white text-lg font-semibold">Weight Loss Calculator</h2>
+    <p>
+      This weight loss calculator estimates how long it will take to reach your
+      target body fat based on your calorie deficit, body weight, and training
+      frequency. Enter your current stats above to generate a personalised
+      fat-loss forecast and timeline.
+    </p>
+  </div>
 
-          <div>
-            <h2 className="text-white text-lg font-semibold">How many calories should I eat?</h2>
-            <p>
-              Most people need a calorie deficit of 300–700 kcal per day.
-            </p>
-          </div>
+  <div>
+    <h2 className="text-white text-lg font-semibold">How does the calculator work?</h2>
+    <p>
+      Fat loss occurs when you consistently maintain a calorie deficit.
+      Roughly 7700 calories correspond to one kilogram of body fat. This
+      calculator estimates your maintenance calories, predicts your weekly
+      weight loss, and generates a realistic timeline to reach your goal.
+    </p>
+  </div>
 
-        </div>
+  <div>
+    <h2 className="text-white text-lg font-semibold">How fast can you lose weight safely?</h2>
+    <p>
+      Most people can safely lose around 0.5–1% of their body weight per week.
+      Faster weight loss can increase the risk of muscle loss and metabolic
+      slowdown. A moderate calorie deficit combined with resistance training
+      usually produces the best long-term results.
+    </p>
+  </div>
+
+  <div>
+    <h2 className="text-white text-lg font-semibold">Is this weight loss calculator accurate?</h2>
+    <p>
+      This calculator provides an estimate based on metabolic formulas and
+      typical fat-loss patterns. Real results may vary depending on diet
+      adherence, sleep, stress, and training intensity.
+    </p>
+  </div>
+
+</div>
 
         {/* 🔥 FOOTER */}
         <div className="text-center text-xs text-zinc-500 mt-10">
