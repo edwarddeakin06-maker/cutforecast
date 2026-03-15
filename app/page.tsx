@@ -69,7 +69,7 @@ const generateTrend = (
 
     const progress = i / weeks;
     // NEAT suppression (people unconsciously move less during a diet)
-const neatSuppression = progress * 180; // up to ~180 kcal/day reduction
+const neatSuppression = Math.min(progress * 180, 120);
     // metabolic adaptation (up to ~15%)
     const adaptation = 1 - progress * 0.15;
 
@@ -79,7 +79,10 @@ const neatSuppression = progress * 180; // up to ~180 kcal/day reduction
     // estimated weekly fat loss
     // dynamic TDEE reduction as weight drops (~25 kcal per kg lost)
 const weightLost = startWeight - weight;
-const metabolicDrop = (weightLost * 25 + neatSuppression * 7) / 7700;
+const metabolicDrop = Math.min(
+  (weightLost * 25 + neatSuppression * 7) / 7700,
+  0.45
+);
 const leannessPenalty = bodyFatPercent < 18 ? 1 - (18 - bodyFatPercent) * 0.02 : 1;
 const weeklyLoss =
   ((startWeight - targetWeight) / weeks) *
