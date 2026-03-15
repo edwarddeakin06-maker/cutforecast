@@ -1031,6 +1031,25 @@ Start Weight: {weightUnit === "kg"
   </div>
 
 </div>
+<div className="mt-6 text-center space-y-2">
+  <h3 className="text-white font-semibold">Popular fat loss timelines</h3>
+
+  <a href="/how-long-to-lose/5kg" className="block text-green-400">
+    How long to lose 5kg
+  </a>
+
+  <a href="/how-long-to-lose/10kg" className="block text-green-400">
+    How long to lose 10kg
+  </a>
+
+  <a href="/how-long-to-lose/15kg" className="block text-green-400">
+    How long to lose 15kg
+  </a>
+
+  <a href="/how-long-to-lose/20kg" className="block text-green-400">
+    How long to lose 20kg
+  </a>
+</div>
 
         {/* 🔥 FOOTER */}
         <div className="text-center text-xs text-zinc-500 mt-10">
