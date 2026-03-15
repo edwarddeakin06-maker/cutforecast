@@ -106,19 +106,7 @@ const weeklyLoss =
   if (i === 1) weight -= waterDrop * 0.4;
 
 }
-// early glycogen + water drop
-const bf = bodyFatPercent;
 
-let waterDrop = 0;
-
-if (bf > 25) waterDrop = 1.2;
-else if (bf > 20) waterDrop = 0.9;
-else if (bf > 15) waterDrop = 0.6;
-else if (bf > 12) waterDrop = 0.3;
-else waterDrop = 0;
-
-if (i === 0) weight -= waterDrop;
-if (i === 1) weight -= waterDrop * 0.4;
     weight += fluctuation;
 
     arr.push(parseFloat(weight.toFixed(1)));
@@ -727,13 +715,18 @@ className="w-full p-3 bg-zinc-800 rounded"
             />
 
             <select
-              value={goalSpeed}
-              onChange={(e) => setGoalSpeed(e.target.value)}
-              className="w-full p-3 bg-zinc-800 rounded"
-            >
-              <div className="flex items-center justify-between bg-zinc-800 p-3 rounded mt-2">
+  value={goalSpeed}
+  onChange={(e) => setGoalSpeed(e.target.value)}
+  className="w-full p-3 bg-zinc-800 rounded"
+>
+  <option value="slow">Slow</option>
+  <option value="moderate">Moderate</option>
+  <option value="aggressive">Aggressive</option>
+</select>
+
+<div className="flex items-center justify-between bg-zinc-800 p-3 rounded mt-2">
   <span className="text-sm text-zinc-400">
-    Starting a new cut (water weight drop)
+    Recently started dieting (water weight drop)
   </span>
 
   <button
@@ -745,10 +738,6 @@ className="w-full p-3 bg-zinc-800 rounded"
     {startingCut ? "ON" : "OFF"}
   </button>
 </div>
-              <option value="slow">Slow</option>
-              <option value="moderate">Moderate</option>
-              <option value="aggressive">Aggressive</option>
-            </select>
 
             <button
               onClick={() => {
