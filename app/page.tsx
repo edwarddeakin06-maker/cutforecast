@@ -55,7 +55,8 @@ type ResultsType = {
 const generateTrend = (
   startWeight: number,
   targetWeight: number,
-  weeks: number
+  weeks: number,
+  bodyFatPercent: number
 ) => {
 
   const arr: number[] = [];
@@ -73,15 +74,34 @@ const generateTrend = (
     const bodyWeightEffect = weight / startWeight;
 
     // estimated weekly fat loss
-    const weeklyLoss =
-      ((startWeight - targetWeight) / weeks) *
-      adaptation *
-      bodyWeightEffect;
+    // dynamic TDEE reduction as weight drops (~25 kcal per kg lost)
+const weightLost = startWeight - weight;
+const metabolicDrop = weightLost * 25 / 7700; 
+
+const weeklyLoss =
+  ((startWeight - targetWeight) / weeks) *
+  adaptation *
+  bodyWeightEffect *
+  (1 - metabolicDrop);
 
     // realistic fluctuation
     const fluctuation = (Math.random() - 0.5) * 0.35;
 
     weight -= weeklyLoss;
+
+// early glycogen + water drop
+const bf = bodyFatPercent;
+
+let waterDrop = 0;
+
+if (bf > 25) waterDrop = 1.2;
+else if (bf > 20) waterDrop = 0.9;
+else if (bf > 15) waterDrop = 0.6;
+else if (bf > 12) waterDrop = 0.3;
+else waterDrop = 0;
+
+if (i === 0) weight -= waterDrop;
+if (i === 1) weight -= waterDrop * 0.4;
     weight += fluctuation;
 
     arr.push(parseFloat(weight.toFixed(1)));
@@ -200,7 +220,7 @@ const weeksToGoal = Math.max(
   Math.ceil((w - targetWeight) / weeklyLossKg)
 );
 
-const trend = generateTrend(w, targetWeight, weeksToGoal);
+const trend = generateTrend(w, targetWeight, weeksToGoal, Number(bodyFat));
 
 const proteinTarget = Math.round(LBM * 2.2);
 
@@ -327,7 +347,7 @@ TDEE += stepBurn + extraExerciseCalories;
     Math.ceil((w - targetWeight) / weeklyLossKg)
   );
 
-  const trend = generateTrend(w, targetWeight, weeksToGoal);
+  const trend = generateTrend(w, targetWeight, weeksToGoal, Number(bodyFat));
 
   setResults({
     ...results,
