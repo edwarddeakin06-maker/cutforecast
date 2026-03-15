@@ -84,16 +84,18 @@ const metabolicDrop = Math.min(
   0.45
 );
 const leannessPenalty = bodyFatPercent < 18 ? 1 - (18 - bodyFatPercent) * 0.02 : 1;
-const weeklyLoss =
+let weeklyLoss =
   ((startWeight - targetWeight) / weeks) *
   adaptation *
   bodyWeightEffect *
   (1 - metabolicDrop) *
   leannessPenalty;
 
+weeklyLoss = Math.max(weeklyLoss, 0.02);
+
 
     // realistic fluctuation
-    const fluctuation = (Math.random() - 0.5) * 1.1; // ±0.55 kg random fluctuation
+    const fluctuation = (Math.random() - 0.5) * 0.7; // ±0.4 kg random fluctuation
 
     weight -= weeklyLoss;
 
@@ -114,10 +116,12 @@ const weeklyLoss =
 }
 
     // persistent water fluctuation
+const previousOffset = waterOffset;
+
 waterOffset += fluctuation * 0.35;
 waterOffset = Math.max(-1.2, Math.min(1.2, waterOffset));
 
-weight += waterOffset;
+weight += (waterOffset - previousOffset);
 
     arr.push(parseFloat(weight.toFixed(1)));
   }
