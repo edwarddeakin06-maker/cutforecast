@@ -56,7 +56,8 @@ const generateTrend = (
   startWeight: number,
   targetWeight: number,
   weeks: number,
-  bodyFatPercent: number
+  bodyFatPercent: number,
+  startingCut: boolean
 ) => {
 
   const arr: number[] = [];
@@ -84,11 +85,27 @@ const weeklyLoss =
   bodyWeightEffect *
   (1 - metabolicDrop);
 
+
     // realistic fluctuation
     const fluctuation = (Math.random() - 0.5) * 0.35;
 
     weight -= weeklyLoss;
 
+    if (startingCut) {
+
+  const bf = bodyFatPercent;
+
+  let waterDrop = 0;
+
+  if (bf > 25) waterDrop = 1.2;
+  else if (bf > 20) waterDrop = 0.9;
+  else if (bf > 15) waterDrop = 0.6;
+  else if (bf > 12) waterDrop = 0.3;
+
+  if (i === 0) weight -= waterDrop;
+  if (i === 1) weight -= waterDrop * 0.4;
+
+}
 // early glycogen + water drop
 const bf = bodyFatPercent;
 
@@ -144,6 +161,7 @@ export default function Home() {
   const [extraExerciseCalories, setExtraExerciseCalories] = useState(0);
   const [scenarioInput, setScenarioInput] = useState("");
   const [scenarioMessage, setScenarioMessage] = useState("");
+  const [startingCut, setStartingCut] = useState(true);
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
 
@@ -220,7 +238,7 @@ const weeksToGoal = Math.max(
   Math.ceil((w - targetWeight) / weeklyLossKg)
 );
 
-const trend = generateTrend(w, targetWeight, weeksToGoal, Number(bodyFat));
+const trend = generateTrend(w, targetWeight, weeksToGoal, Number(bodyFat), startingCut);
 
 const proteinTarget = Math.round(LBM * 2.2);
 
@@ -347,7 +365,7 @@ TDEE += stepBurn + extraExerciseCalories;
     Math.ceil((w - targetWeight) / weeklyLossKg)
   );
 
-  const trend = generateTrend(w, targetWeight, weeksToGoal, Number(bodyFat));
+  const trend = generateTrend(w, targetWeight, weeksToGoal, Number(bodyFat), startingCut);
 
   setResults({
     ...results,
@@ -713,6 +731,20 @@ className="w-full p-3 bg-zinc-800 rounded"
               onChange={(e) => setGoalSpeed(e.target.value)}
               className="w-full p-3 bg-zinc-800 rounded"
             >
+              <div className="flex items-center justify-between bg-zinc-800 p-3 rounded mt-2">
+  <span className="text-sm text-zinc-400">
+    Starting a new cut (water weight drop)
+  </span>
+
+  <button
+    onClick={() => setStartingCut(!startingCut)}
+    className={`px-3 py-1 rounded text-xs font-semibold ${
+      startingCut ? "bg-green-500 text-black" : "bg-zinc-700 text-white"
+    }`}
+  >
+    {startingCut ? "ON" : "OFF"}
+  </button>
+</div>
               <option value="slow">Slow</option>
               <option value="moderate">Moderate</option>
               <option value="aggressive">Aggressive</option>
