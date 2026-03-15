@@ -63,11 +63,13 @@ const generateTrend = (
   const arr: number[] = [];
 
   let weight = startWeight;
+  let waterOffset = 0;
 
   for (let i = 0; i < weeks; i++) {
 
     const progress = i / weeks;
-
+    // NEAT suppression (people unconsciously move less during a diet)
+const neatSuppression = progress * 180; // up to ~180 kcal/day reduction
     // metabolic adaptation (up to ~15%)
     const adaptation = 1 - progress * 0.15;
 
@@ -77,17 +79,18 @@ const generateTrend = (
     // estimated weekly fat loss
     // dynamic TDEE reduction as weight drops (~25 kcal per kg lost)
 const weightLost = startWeight - weight;
-const metabolicDrop = weightLost * 25 / 7700; 
-
+const metabolicDrop = (weightLost * 25 + neatSuppression * 7) / 7700;
+const leannessPenalty = bodyFatPercent < 18 ? 1 - (18 - bodyFatPercent) * 0.02 : 1;
 const weeklyLoss =
   ((startWeight - targetWeight) / weeks) *
   adaptation *
   bodyWeightEffect *
-  (1 - metabolicDrop);
+  (1 - metabolicDrop) *
+  leannessPenalty;
 
 
     // realistic fluctuation
-    const fluctuation = (Math.random() - 0.5) * 0.35;
+    const fluctuation = (Math.random() - 0.5) * 1.1; // ±0.55 kg random fluctuation
 
     weight -= weeklyLoss;
 
@@ -107,7 +110,11 @@ const weeklyLoss =
 
 }
 
-    weight += fluctuation;
+    // persistent water fluctuation
+waterOffset += fluctuation * 0.35;
+waterOffset = Math.max(-1.2, Math.min(1.2, waterOffset));
+
+weight += waterOffset;
 
     arr.push(parseFloat(weight.toFixed(1)));
   }
