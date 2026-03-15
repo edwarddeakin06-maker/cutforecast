@@ -121,7 +121,9 @@ export default function Home() {
   const [dailyDeficitValue, setDailyDeficitValue] = useState<number | null>(null);
   const [weeklyLossValue, setWeeklyLossValue] = useState<number | null>(null);
   const [customSteps, setCustomSteps] = useState<number | null>(null);
-
+  const [extraExerciseCalories, setExtraExerciseCalories] = useState(0);
+  const [scenarioInput, setScenarioInput] = useState("");
+  const [scenarioMessage, setScenarioMessage] = useState("");
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
 
@@ -167,7 +169,7 @@ let TDEE = BMR * activityMultiplier;
 
 // step calorie burn adjustment
 const stepBurn = ((customSteps || stepTarget || 8000) - 8000) * 0.04;
-TDEE += stepBurn;
+TDEE += stepBurn + extraExerciseCalories;
 
 setMaintenanceCalories(Math.round(TDEE));
 
@@ -293,7 +295,7 @@ const bf = Number(bodyFat) / 100;
 const steps = customSteps || stepTarget || 8000;
 const stepBurn = (steps - 8000) * 0.04;
 
-TDEE += stepBurn;
+TDEE += stepBurn + extraExerciseCalories;
 
   const calories = Number(customCalories);
 
@@ -355,7 +357,7 @@ useEffect(() => {
   if (results && customCalories) {
     recalculateFromCustom();
   }
-}, [customCalories, customSteps]);
+}, [customCalories, customSteps, extraExerciseCalories]);
 
   // 🔥 Dragging logic
   const handleMouseDown = (e: any) => {
@@ -468,6 +470,54 @@ ctx.fillText(`Start Weight: ${startWeightText}`, 50, 470);
     link.href = canvas.toDataURL("image/png");
     link.click();
   };
+};
+const applyScenario = () => {
+
+  if (!results) return;
+
+  const text = scenarioInput.toLowerCase();
+
+  let extraCalories = 0;
+
+  if (text.includes("cycle") || text.includes("cycling") || text.includes("bike")) {
+    extraCalories += 500;
+  }
+
+  if (text.includes("run") || text.includes("running")) {
+    extraCalories += 700;
+  }
+
+  if (text.includes("walk") || text.includes("walking")) {
+    extraCalories += 250;
+  }
+
+  if (text.includes("hockey")) {
+    extraCalories += 600;
+  }
+
+  const hoursMatch = text.match(/(\d+)\s*hour/);
+
+  if (hoursMatch) {
+    const hours = Number(hoursMatch[1]);
+    extraCalories *= hours;
+  }
+
+  if (extraCalories > 0) {
+
+  const dailyBurn = Math.round(extraCalories / 7);
+
+  setExtraExerciseCalories(dailyBurn);
+
+  setScenarioMessage(
+    `Detected activity change. Estimated extra burn: ${extraCalories} kcal/week (+${dailyBurn} kcal/day).`
+  );
+
+} else {
+
+    setScenarioMessage("Couldn't detect a fitness change.");
+
+  }
+
 };
   return (
     <main className="min-h-screen bg-zinc-950 text-white p-6">
@@ -777,6 +827,32 @@ className="w-full p-3 bg-zinc-800 rounded"
           placeholder="Protein per day (optional)"
           className="w-full p-3 bg-zinc-800 rounded"
           />
+          <div className="bg-zinc-800 p-3 rounded mt-4">
+
+<p className="text-sm text-zinc-400 mb-2">
+Describe a change to your routine
+</p>
+
+<input
+  type="text"
+  value={scenarioInput}
+  onChange={(e) => setScenarioInput(e.target.value)}
+  placeholder="Example: I'll start cycling 4 hours a week"
+  className="w-full p-3 bg-zinc-900 rounded"
+/>
+
+<button
+  onClick={applyScenario}
+  className="mt-2 bg-purple-500 px-4 py-2 rounded font-bold"
+>
+Apply scenario
+</button>
+
+{scenarioMessage && (
+  <p className="text-xs text-zinc-400 mt-2">{scenarioMessage}</p>
+)}
+
+</div>
 
           
 
