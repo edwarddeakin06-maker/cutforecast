@@ -560,20 +560,28 @@ const applyScenario = () => {
 
 };
   return (
-    <main className="min-h-screen bg-zinc-950 text-white p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <main className="min-h-screen bg-zinc-950 text-white px-4 py-8 sm:p-8">
+      <div className="max-w-5xl mx-auto space-y-8">
 
-        <h1 className="text-5xl font-bold text-center">Weight Loss Calculator</h1>
-        <p className="text-center text-zinc-400 max-w-2xl mx-auto">
+        <header className="text-center space-y-4 pt-4 sm:pt-8">
+          <p className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">
+            CutForecast <span className="h-1 w-1 rounded-full bg-emerald-300" /> Personal cutting plan
+          </p>
+          <h1 className="text-4xl font-black tracking-tight sm:text-6xl">Weight Loss Calculator</h1>
+          <p className="text-center text-zinc-400 max-w-2xl mx-auto text-base leading-7 sm:text-lg">
         Predict how long it will take to reach your goal body fat using calorie deficits,
         training frequency and realistic fat-loss modelling.
         Drag the graph to simulate cheat days and watch your timeline adjust.
-        </p>
-        <section className="grid md:grid-cols-2 gap-4">
+          </p>
+        </header>
+        <section className="grid md:grid-cols-2 gap-5">
 
           {/* 🔥 INPUTS */}
-          <div className="bg-zinc-900 p-4 rounded-xl space-y-3">
-            <h2 className="text-xl font-semibold">Your Stats</h2>
+          <div className="bg-zinc-900 p-5 rounded-2xl space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-400 font-bold text-zinc-950">1</span>
+              <h2 className="text-xl font-semibold">Your Stats</h2>
+            </div>
             
 
 
@@ -780,8 +788,12 @@ className="w-full p-3 bg-zinc-800 rounded"
           </div>
 
           {/* 🔥 PLAN (always visible) */}
-          <div className="bg-zinc-900 p-4 rounded-xl space-y-2">
-            <h2 className="text-xl font-semibold">Your Plan</h2>
+          <div className="bg-zinc-900 p-5 rounded-2xl space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-400 font-bold text-zinc-950">2</span>
+              <h2 className="text-xl font-semibold">Your Plan</h2>
+            </div>
+            <p className="text-sm text-zinc-500">Your personalised targets will appear here.</p>
 
             <p>Calories: {results ? results.suggestedCalories : "--"} kcal</p>
             <p>Protein: {results ? results.proteinTarget : "--"} g/day</p>
@@ -939,7 +951,7 @@ Apply scenario
         )}
 
         {/* 🔥 GRAPH (always visible) */}
-        <div className="bg-white text-black p-6 rounded-xl w-full">
+        <div className="bg-white text-black p-5 sm:p-7 rounded-2xl w-full shadow-2xl shadow-black/30">
           <p className="text-center text-xs text-gray-500 mb-2">
   Generated with CutForecast.com
 </p>
