@@ -1,29 +1,16 @@
-import Home from "../../page";
-import Link from "next/link";
+import type { Metadata } from "next";
+import Calculator from "../../page";
 
-export default function Page({ params }: { params: { amount: string } }) {
-  const amount = params.amount;
+type PageProps = { params: Promise<{ amount: string }> };
 
-  return (
-    <div>
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { amount } = await params;
+  return {
+    title: `How Long To Lose ${amount}? | CutForecast`,
+    description: `Estimate a realistic timeline and daily calorie target for losing ${amount}.`,
+  };
+}
 
-      <div style={{textAlign:"center", marginTop:"20px"}}>
-        <Link href="/" style={{color:"#4ade80", fontWeight:"bold"}}>
-          ← Back to CutForecast Calculator
-        </Link>
-      </div>
-
-      <h1 style={{textAlign:"center", fontSize:"40px", marginTop:"40px"}}>
-        How Long Does It Take To Lose {amount}?
-      </h1>
-
-      <p style={{textAlign:"center", maxWidth:"600px", margin:"20px auto"}}>
-        Use this calculator to estimate how long it may take to lose {amount}
-        based on your calorie deficit and body fat percentage.
-      </p>
-
-      <Home />
-
-    </div>
-  );
+export default function AmountPage() {
+  return <Calculator />;
 }

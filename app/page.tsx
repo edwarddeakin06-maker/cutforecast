@@ -48,8 +48,12 @@ type ResultsType = {
   weeksToGoal: number;
   trend: number[];
   proteinTarget: number;
+  fatTarget: number;
+  carbTarget: number;
   suggestedCalories: number;
   targetBF: number;
+  weeklyLossKg: number;
+  pace: "Sustainable" | "Ambitious" | "Aggressive";
 };
 
 const generateTrend = (
@@ -164,6 +168,10 @@ export default function Home() {
   const [scenarioInput, setScenarioInput] = useState("");
   const [scenarioMessage, setScenarioMessage] = useState("");
   const [startingCut, setStartingCut] = useState(true);
+  const [validationError, setValidationError] = useState("");
+  const [checkInWeek, setCheckInWeek] = useState(1);
+  const [checkInWeight, setCheckInWeight] = useState("");
+  const [checkInMessage, setCheckInMessage] = useState("");
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
 
@@ -192,8 +200,29 @@ if (heightUnit === "ft") {
 
 }
 
-  const bf = Number(bodyFat) / 100;
+  const currentBodyFat = Number(bodyFat);
+  const targetBodyFatNumber = Number(targetBodyFat) || 12;
+  const days = Number(trainingDays);
   const a = Number(age);
+
+  if (!w || !h || !a || !sex || !currentBodyFat || Number.isNaN(days)) {
+    setValidationError("Add your weight, height, body fat, age, sex, and training days to build your plan.");
+    return;
+  }
+
+  if (w < 35 || w > 350 || h < 120 || h > 240 || a < 16 || a > 100 || days < 0 || days > 7 || currentBodyFat < 3 || currentBodyFat > 70) {
+    setValidationError("Check the values entered. This calculator supports ages 16–100, 0–7 training days, and realistic weight, height, and body-fat ranges.");
+    return;
+  }
+
+  if (targetBodyFatNumber < 4 || targetBodyFatNumber >= currentBodyFat) {
+    setValidationError("Choose a target body-fat percentage below your current estimate (and at least 4%).");
+    return;
+  }
+
+  setValidationError("");
+
+  const bf = Number(bodyFat) / 100;
   let BMR = 10 * w + 6.25 * h - 5 * a;
 
 if (sex === "male") BMR += 5;
@@ -228,7 +257,7 @@ setStepTarget(steps);
 setCustomSteps(steps);
 const LBM = w * (1 - bf);
 
-const targetBF = Number(targetBodyFat) || 12;
+const targetBF = targetBodyFatNumber;
 const tbf = targetBF / 100;
 
 const targetWeight = LBM / (1 - tbf);
@@ -245,17 +274,26 @@ const trend = generateTrend(w, targetWeight, weeksToGoal, Number(bodyFat), start
 const proteinTarget = Math.round(LBM * 2.2);
 
 const suggestedCalories = Math.round(TDEE - dailyDeficit);
+const fatTarget = Math.max(40, Math.round(w * 0.6));
+const carbTarget = Math.max(0, Math.round((suggestedCalories - proteinTarget * 4 - fatTarget * 9) / 4));
+const pace = weeklyLossKg / w < 0.0075 ? "Sustainable" : weeklyLossKg / w <= 0.01 ? "Ambitious" : "Aggressive";
 
 setResults({
   targetWeight: targetWeight.toFixed(1),
   weeksToGoal,
   trend,
   proteinTarget,
+  fatTarget,
+  carbTarget,
   suggestedCalories,
   targetBF,
+  weeklyLossKg: Number(weeklyLossKg.toFixed(2)),
+  pace,
 });
 
 setCustomCalories(String(suggestedCalories));
+setDailyDeficitValue(dailyDeficit);
+setWeeklyLossValue(Number(weeklyLossKg.toFixed(2)));
 
 const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
 
@@ -273,6 +311,7 @@ const milestoneWeights = milestoneWeeks.map((w) => trend[w - 1]);
 setMilestones(milestoneWeights);
 
 setCheatImpact(null);
+setCheckInMessage("");
 };
   useEffect(() => {
   if (navigator.language === "en-GB") {
@@ -377,6 +416,10 @@ TDEE += stepBurn + extraExerciseCalories;
     proteinTarget: customProtein
       ? Number(customProtein)
       : results.proteinTarget,
+    fatTarget: results.fatTarget,
+    carbTarget: Math.max(0, Math.round((calories - (customProtein ? Number(customProtein) : results.proteinTarget) * 4 - results.fatTarget * 9) / 4)),
+    weeklyLossKg: Number(weeklyLossKg.toFixed(2)),
+    pace: weeklyLossKg / w < 0.0075 ? "Sustainable" : weeklyLossKg / w <= 0.01 ? "Ambitious" : "Aggressive",
   });
 
   const goal = dayjs().add(weeksToGoal, "week").format("MMM D YYYY");
@@ -392,6 +435,39 @@ TDEE += stepBurn + extraExerciseCalories;
   const milestoneWeights = milestoneWeeks.map((w) => trend[w - 1]);
 
   setMilestones(milestoneWeights);
+};
+const applyCheckIn = () => {
+  if (!results || !checkInWeight) return;
+
+  const enteredWeight = Number(checkInWeight);
+  const loggedWeight = weightUnit === "kg" ? enteredWeight : enteredWeight * 0.453592;
+  const week = Math.max(1, Math.min(checkInWeek, results.weeksToGoal));
+  const expectedWeight = results.trend[week - 1];
+
+  if (!enteredWeight || loggedWeight < 35 || loggedWeight > 350) {
+    setCheckInMessage("Enter a realistic 7-day average weight to update the forecast.");
+    return;
+  }
+
+  const expectedWeeklyLoss = Math.max(0.05, results.weeklyLossKg);
+  const remainingWeeks = Math.max(1, Math.ceil((loggedWeight - Number(results.targetWeight)) / expectedWeeklyLoss));
+  const adjustedTrend = [
+    ...results.trend.slice(0, week - 1),
+    loggedWeight,
+    ...generateTrend(loggedWeight, Number(results.targetWeight), remainingWeeks, Number(bodyFat), false),
+  ];
+  const updatedWeeks = week + remainingWeeks;
+  const difference = loggedWeight - expectedWeight;
+
+  setResults({ ...results, trend: adjustedTrend, weeksToGoal: updatedWeeks });
+  setGoalDate(dayjs().add(updatedWeeks, "week").format("MMM D YYYY"));
+  setCheckInMessage(
+    difference > 0.25
+      ? `Your average is ${difference.toFixed(1)} kg above forecast. Your timeline has been refreshed.`
+      : difference < -0.25
+      ? `You are ${(Math.abs(difference)).toFixed(1)} kg ahead of forecast. Your timeline has been refreshed.`
+      : "You are tracking close to forecast. Your timeline has been refreshed."
+  );
 };
 useEffect(() => {
   if (results && customCalories) {
@@ -602,6 +678,8 @@ className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs"
 
 <input
 type="number"
+min="35"
+max="350"
 value={weight}
 onChange={(e) => setWeight(e.target.value)}
 placeholder="Enter your weight (kg)"
@@ -640,6 +718,8 @@ className="w-full p-3 bg-zinc-800 rounded"
             <p className="text-sm text-zinc-500">Body Fat %</p>
             <input
               type="number"
+              min="3"
+              max="70"
               value={bodyFat}
               onChange={(e) => setBodyFat(e.target.value)}
               placeholder="Enter body fat %"
@@ -648,6 +728,8 @@ className="w-full p-3 bg-zinc-800 rounded"
             <p className="text-sm text-zinc-500">Training Days</p>
             <input
               type="number"
+              min="0"
+              max="7"
               value={trainingDays}
               onChange={(e) => setTrainingDays(e.target.value)}
               placeholder="Training days per week"
@@ -668,6 +750,8 @@ className="w-full p-3 bg-zinc-800 rounded"
             <p className="text-sm text-zinc-500">Age</p>
             <input
               type="number"
+              min="16"
+              max="100"
               value={age}
               onChange={(e) => setAge(e.target.value)}
               placeholder="Enter your age"
@@ -691,6 +775,8 @@ className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs"
 
 <input
 type="number"
+min="120"
+max="240"
 value={height}
 onChange={(e) => setHeight(e.target.value)}
 placeholder="Enter your height (cm)"
@@ -730,6 +816,7 @@ className="w-full p-3 bg-zinc-800 rounded"
             <input
             type="text"
             inputMode="numeric"
+            pattern="[0-9]*"
             value={targetBodyFat}
             onChange={(e) => setTargetBodyFat(e.target.value)}
             placeholder="Target body fat % (e.g. 12)"
@@ -761,26 +848,13 @@ className="w-full p-3 bg-zinc-800 rounded"
   </button>
 </div>
 
+            {validationError && (
+              <p role="alert" className="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">
+                {validationError}
+              </p>
+            )}
             <button
-              onClick={() => {
-
-  if (weightUnit === "kg") {
-
-    if (!weight || !height || !bodyFat || !sex || !age) {
-      return alert("Please fill in all fields");
-    }
-
-  } else {
-
-    if (!weightSt || !heightFt || !bodyFat || !sex || !age) {
-      return alert("Please fill in all fields");
-    }
-
-  }
-
-  calculate();
-
-}}
+              onClick={calculate}
               className="w-full py-3 bg-green-500 rounded font-bold text-black"
             >
               Calculate
@@ -795,28 +869,24 @@ className="w-full p-3 bg-zinc-800 rounded"
             </div>
             <p className="text-sm text-zinc-500">Your personalised targets will appear here.</p>
 
-            <p>Calories: {results ? results.suggestedCalories : "--"} kcal</p>
-            <p>Protein: {results ? results.proteinTarget : "--"} g/day</p>
-            <p>Target Body Fat: {results ? results.targetBF : "--"}%</p>
-            <p>Time to Goal: {results ? results.weeksToGoal : "--"} weeks</p>
-            <p>Daily steps target: {stepTarget ? stepTarget : "--"} steps/day</p>
             {results && (
-            <p className="text-zinc-400 text-sm">
-            Maintenance calories after goal: ~{Math.round(results.suggestedCalories + 500)} kcal
-            </p>
-            )}
-
-            {results && (
-            <div className="bg-zinc-800 p-3 rounded-lg text-center mt-3">
-            <p className="text-lg font-semibold">
-            You will reach {results.targetBF}% body fat in approximately {results.weeksToGoal} weeks.
-            </p>
-            {goalDate && (
-            <p className="text-sm text-zinc-500">
-            Estimated goal date: {goalDate}
-            </p>
-            )}
-            </div>
+              <>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="rounded-xl bg-zinc-800 p-3"><p className="text-zinc-500">Daily calories</p><p className="text-xl font-bold">{results.suggestedCalories}</p><p className="text-zinc-500">kcal/day</p></div>
+                  <div className="rounded-xl bg-zinc-800 p-3"><p className="text-zinc-500">Goal date</p><p className="text-lg font-bold">{goalDate || "--"}</p><p className="text-zinc-500">~{results.weeksToGoal} weeks</p></div>
+                </div>
+                <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-center">
+                  <p className="text-xs font-bold uppercase tracking-wider text-emerald-300">{results.pace} pace</p>
+                  <p className="mt-1 text-lg font-semibold">{results.weeklyLossKg} kg/week expected</p>
+                  <p className="mt-1 text-xs text-zinc-400">A realistic result can vary by around 1–2 weeks due to water weight, adherence, and daily activity.</p>
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                  <div className="rounded-lg bg-zinc-800 p-2"><p className="font-semibold">{results.proteinTarget}g</p><p className="text-xs text-zinc-500">protein</p></div>
+                  <div className="rounded-lg bg-zinc-800 p-2"><p className="font-semibold">{results.fatTarget}g</p><p className="text-xs text-zinc-500">fat</p></div>
+                  <div className="rounded-lg bg-zinc-800 p-2"><p className="font-semibold">{results.carbTarget}g</p><p className="text-xs text-zinc-500">carbs</p></div>
+                </div>
+                <p className="text-center text-xs text-zinc-500">Goal: {results.targetBF}% body fat · {stepTarget} daily steps · maintenance after goal ~{Math.round(results.suggestedCalories + 500)} kcal</p>
+              </>
             )}
             {results && (
           <div className="bg-zinc-900 p-4 rounded-xl mt-4 space-y-3">
@@ -924,6 +994,24 @@ Apply scenario
           
 
           </div>
+          )}
+          {results && (
+            <div className="mt-4 rounded-xl border border-sky-400/20 bg-sky-400/10 p-4 space-y-3">
+              <div>
+                <h3 className="font-semibold text-sky-200">Weekly check-in</h3>
+                <p className="text-xs text-zinc-400">Enter your 7-day average weight to refresh the remaining forecast.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-xs text-zinc-400">Week into plan
+                  <input type="number" min="1" max={results.weeksToGoal} value={checkInWeek} onChange={(e) => setCheckInWeek(Number(e.target.value))} className="mt-1 w-full rounded bg-zinc-900 p-2 text-white" />
+                </label>
+                <label className="text-xs text-zinc-400">7-day average ({weightUnit === "kg" ? "kg" : "lb"})
+                  <input type="number" min="35" value={checkInWeight} onChange={(e) => setCheckInWeight(e.target.value)} placeholder={weightUnit === "kg" ? "e.g. 78.4" : "e.g. 173"} className="mt-1 w-full rounded bg-zinc-900 p-2 text-white" />
+                </label>
+              </div>
+              <button onClick={applyCheckIn} className="w-full rounded bg-sky-400 px-4 py-2 text-sm font-bold text-zinc-950">Refresh forecast</button>
+              {checkInMessage && <p className="text-xs text-sky-100">{checkInMessage}</p>}
+            </div>
           )}
           </div>
         </section>
