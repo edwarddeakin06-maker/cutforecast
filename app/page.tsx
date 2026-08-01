@@ -172,6 +172,7 @@ export default function Home() {
   const [checkInWeek, setCheckInWeek] = useState(1);
   const [checkInWeight, setCheckInWeight] = useState("");
   const [checkInMessage, setCheckInMessage] = useState("");
+  const [hydrated, setHydrated] = useState(false);
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
 
@@ -320,23 +321,60 @@ setCheckInMessage("");
   }
 }, []);
 useEffect(() => {
-  const saved = localStorage.getItem("cutforecast-data");
-
-  if (!saved) return;
-
-  const data = JSON.parse(saved);
-
-  if (data.weight) setWeight(data.weight);
-  if (data.bodyFat) setBodyFat(data.bodyFat);
-  if (data.trainingDays) setTrainingDays(data.trainingDays);
-  if (data.sex) setSex(data.sex);
-  if (data.height) setHeight(data.height);
-  if (data.age) setAge(data.age);
-  if (data.goalSpeed) setGoalSpeed(data.goalSpeed);
-  if (data.targetBodyFat) setTargetBodyFat(data.targetBodyFat);
-  if (data.customCalories) setCustomCalories(data.customCalories);
-  if (data.customProtein) setCustomProtein(data.customProtein);
+  try {
+    const saved = localStorage.getItem("cutforecast-data");
+    if (!saved) return;
+    const data = JSON.parse(saved);
+    setWeight(data.weight ?? "");
+    setBodyFat(data.bodyFat ?? "");
+    setTrainingDays(data.trainingDays ?? "");
+    setSex(data.sex ?? "");
+    setHeight(data.height ?? "");
+    setAge(data.age ?? "");
+    setGoalSpeed(data.goalSpeed ?? "moderate");
+    setTargetBodyFat(data.targetBodyFat ?? "");
+    setWeightUnit(data.weightUnit ?? "kg");
+    setHeightUnit(data.heightUnit ?? "cm");
+    setWeightSt(data.weightSt ?? "");
+    setWeightLb(data.weightLb ?? "");
+    setHeightFt(data.heightFt ?? "");
+    setHeightIn(data.heightIn ?? "");
+    setCustomCalories(data.customCalories ?? "");
+    setCustomProtein(data.customProtein ?? "");
+    setStepTarget(data.stepTarget ?? null);
+    setCustomSteps(data.customSteps ?? null);
+    setMaintenanceCalories(data.maintenanceCalories ?? null);
+    setExtraExerciseCalories(data.extraExerciseCalories ?? 0);
+    setStartingCut(data.startingCut ?? true);
+    setResults(data.results ?? null);
+    setGoalDate(data.goalDate ?? null);
+    setMilestones(data.milestones ?? []);
+    setDailyDeficitValue(data.dailyDeficitValue ?? null);
+    setWeeklyLossValue(data.weeklyLossValue ?? null);
+  } catch {
+    localStorage.removeItem("cutforecast-data");
+  } finally {
+    setHydrated(true);
+  }
 }, []);
+
+useEffect(() => {
+  if (!hydrated) return;
+  localStorage.setItem("cutforecast-data", JSON.stringify({
+    weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age,
+    weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones,
+    customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue,
+    customSteps, extraExerciseCalories, startingCut,
+  }));
+}, [hydrated, weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age, weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones, customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue, customSteps, extraExerciseCalories, startingCut]);
+
+const resetPlan = () => {
+  localStorage.removeItem("cutforecast-data");
+  setWeight(""); setBodyFat(""); setTrainingDays(""); setTargetBodyFat(""); setSex(""); setHeight(""); setAge("");
+  setWeightSt(""); setWeightLb(""); setHeightFt(""); setHeightIn(""); setCustomCalories(""); setCustomProtein("");
+  setStepTarget(null); setCustomSteps(null); setMaintenanceCalories(null); setResults(null); setGoalDate(null); setMilestones([]);
+  setDailyDeficitValue(null); setWeeklyLossValue(null); setExtraExerciseCalories(0); setCheckInWeight(""); setCheckInMessage("");
+};
 const recalculateFromCustom = () => {
   if (!results || !customCalories) return;
 
@@ -649,6 +687,10 @@ const applyScenario = () => {
         training frequency and realistic fat-loss modelling.
         Drag the graph to simulate cheat days and watch your timeline adjust.
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
+            <span className="rounded-full bg-zinc-900/80 px-3 py-1.5 text-zinc-400">Your plan saves automatically on this device</span>
+            {(results || weight || weightSt) && <button onClick={resetPlan} className="rounded-full border border-zinc-700 px-3 py-1.5 font-semibold text-zinc-300 hover:border-rose-400 hover:text-rose-200">Start a new plan</button>}
+          </div>
         </header>
         <section className="grid md:grid-cols-2 gap-5">
 
