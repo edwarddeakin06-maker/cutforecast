@@ -463,6 +463,21 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("cf") !== "1") return;
+
+  setWeightUnit("kg");
+  setHeightUnit("cm");
+  setWeight(params.get("weight") ?? "");
+  setHeight(params.get("height") ?? "");
+  setBodyFat(params.get("bodyFat") ?? "");
+  setSex(params.get("sex") ?? "");
+  setAge(params.get("age") ?? "");
+  setTrainingDays(params.get("trainingDays") ?? "");
+  setCustomCalories(params.get("calories") ?? "");
+}, []);
+
+useEffect(() => {
   if (!hydrated) return;
   localStorage.setItem("cutforecast-data", JSON.stringify({
     weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age,
