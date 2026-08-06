@@ -1161,7 +1161,7 @@ className="w-full p-3 bg-zinc-800 rounded"
                   <div className="rounded-lg bg-zinc-800 p-2"><p className="font-semibold">{results.fatTarget}g</p><p className="text-xs text-zinc-500">fat</p></div>
                   <div className="rounded-lg bg-zinc-800 p-2"><p className="font-semibold">{results.carbTarget}g</p><p className="text-xs text-zinc-500">carbs</p></div>
                 </div>
-                <p className="text-center text-xs text-zinc-500">Goal: {results.targetBF}% body fat · {stepTarget} daily steps · maintenance after goal ~{Math.round(results.suggestedCalories + 500)} kcal</p>
+                <p className="text-center text-xs text-zinc-500">Goal: {goalAmountKg ? `lose ${goalAmountKg} kg (target ~${results.targetWeight} kg)` : `${results.targetBF}% body fat`} · {stepTarget} daily steps · maintenance after goal ~{Math.round(results.suggestedCalories + 500)} kcal</p>
                 <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4">
                   <div className="flex items-center justify-between gap-3">
                     <div><h3 className="font-semibold text-emerald-100">This week&apos;s focus</h3><p className="mt-1 text-xs text-zinc-400">Tick these off as you build consistency.</p></div>
