@@ -13,10 +13,34 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
-  title: "Cut Forecast Calculator - Plan Your Fat Loss",
+export const metadata: Metadata = {
+  metadataBase: new URL("https://cutforecast.com"),
+  title: {
+    default: "CutForecast | Personal Fat Loss Calculator",
+    template: "%s | CutForecast",
+  },
   description:
-    "Free fat loss calculator. Calculate your calories, protein, and predict your weight loss over time with CutForecast.",
+    "Build a personalised fat-loss plan with calorie targets, macros, goal dates, and weekly progress tracking.",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: "https://cutforecast.com",
+    siteName: "CutForecast",
+    title: "CutForecast | Personal Fat Loss Calculator",
+    description: "Build a calorie, macro, and progress plan for your cut.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CutForecast | Personal Fat Loss Calculator",
+    description: "Build a calorie, macro, and progress plan for your cut.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
 };
 
 export default function RootLayout({
