@@ -174,6 +174,7 @@ weight += (waterOffset - previousOffset);
 
 export default function Home({ embedded = false, goalAmountKg }: { embedded?: boolean; goalAmountKg?: number }) {
   const chartRef = useRef<ChartJS<"line"> | null>(null);
+  const dragStartTrendRef = useRef<number[] | null>(null);
   const pathname = usePathname();
   const pageCopy = {
     "/body-fat-calculator": {
@@ -716,7 +717,7 @@ useEffect(() => {
   // 🔥 Dragging logic
   const handleMouseDown = (e: ReactMouseEvent<HTMLDivElement>) => {
     const chart = chartRef.current;
-    if (!chart) return;
+    if (!chart || !results) return;
 
     const points = chart.getElementsAtEventForMode(
       e.nativeEvent,
@@ -725,7 +726,10 @@ useEffect(() => {
       false
     );
 
-    if (points.length > 0) setDraggingIndex(points[0].index);
+    if (points.length > 0) {
+      dragStartTrendRef.current = [...results.trend];
+      setDraggingIndex(points[0].index);
+    }
   };
 
   const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement>) => {
@@ -734,33 +738,32 @@ useEffect(() => {
     const chart = chartRef.current;
     if (!chart) return;
     const yAxis = chart.scales.y;
-
-    const valueAtPointer = yAxis.getValueForPixel(e.nativeEvent.offsetY);
+    const canvasBounds = chart.canvas.getBoundingClientRect();
+    const chartY = (e.clientY - canvasBounds.top) * (chart.height / canvasBounds.height);
+    const valueAtPointer = yAxis.getValueForPixel(chartY);
     if (typeof valueAtPointer !== "number") return;
-    const newValue = Math.max(60, Math.min(120, valueAtPointer));
+    const newValue = Math.max(yAxis.min, Math.min(yAxis.max, valueAtPointer));
 
-    const updated = [...results.trend];
+    const originalTrend = dragStartTrendRef.current ?? results.trend;
+    const updated = [...originalTrend];
     updated[draggingIndex] = parseFloat(newValue.toFixed(1));
 
     const target = Number(results.targetWeight);
+    const pointsRemaining = Math.max(1, updated.length - 1 - draggingIndex);
 
     for (let i = draggingIndex + 1; i < updated.length; i++) {
-      const remaining = updated.length - i;
-      const current = updated[i - 1];
-      const step = (current - target) / remaining;
-      updated[i] = parseFloat((current - step).toFixed(1));
+      const progress = (i - draggingIndex) / pointsRemaining;
+      updated[i] = parseFloat((newValue + (target - newValue) * progress).toFixed(1));
     }
-    const newEndWeight = updated[updated.length - 1];
-
-    if (newEndWeight > Number(results.targetWeight)) {
-    const diff = newEndWeight - Number(results.targetWeight);
-    const delay = Math.ceil(diff / 0.2);
-    setCheatImpact(delay);
-    }
+    const changeFromForecast = newValue - originalTrend[draggingIndex];
+    setCheatImpact(changeFromForecast > 0 ? Math.ceil((changeFromForecast / Math.max(results.weeklyLossKg, 0.05)) * 7) : null);
     setResults({ ...results, trend: updated });
   };
 
-  const handleMouseUp = () => setDraggingIndex(null);
+  const handleMouseUp = () => {
+    setDraggingIndex(null);
+    dragStartTrendRef.current = null;
+  };
 const downloadShareImage = () => {
   const chart = chartRef.current;
 
