@@ -9,6 +9,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/body-fat-calculator",
     "/calorie-deficit-calculator",
     "/how-long-to-lose-weight",
+    "/free-cut-plan",
     "/how-long-to-lose/5kg",
     "/how-long-to-lose/10kg",
     "/how-long-to-lose/15kg",
