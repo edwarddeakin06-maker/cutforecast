@@ -1,6 +1,8 @@
 "use client";
 import html2canvas from "html2canvas";
 import { useState, useRef, useEffect } from "react";
+import type { User } from "@supabase/supabase-js";
+import { supabase } from "./supabase";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -173,8 +175,43 @@ export default function Home() {
   const [checkInWeight, setCheckInWeight] = useState("");
   const [checkInMessage, setCheckInMessage] = useState("");
   const [hydrated, setHydrated] = useState(false);
+  const [authUser, setAuthUser] = useState<User | null>(null);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authMessage, setAuthMessage] = useState("");
+  const [cloudReady, setCloudReady] = useState(false);
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
+
+  const restorePlan = (data: Record<string, any>) => {
+    setWeight(data.weight ?? "");
+    setBodyFat(data.bodyFat ?? "");
+    setTrainingDays(data.trainingDays ?? "");
+    setSex(data.sex ?? "");
+    setHeight(data.height ?? "");
+    setAge(data.age ?? "");
+    setGoalSpeed(data.goalSpeed ?? "moderate");
+    setTargetBodyFat(data.targetBodyFat ?? "");
+    setWeightUnit(data.weightUnit ?? "kg");
+    setHeightUnit(data.heightUnit ?? "cm");
+    setWeightSt(data.weightSt ?? "");
+    setWeightLb(data.weightLb ?? "");
+    setHeightFt(data.heightFt ?? "");
+    setHeightIn(data.heightIn ?? "");
+    setCustomCalories(data.customCalories ?? "");
+    setCustomProtein(data.customProtein ?? "");
+    setStepTarget(data.stepTarget ?? null);
+    setCustomSteps(data.customSteps ?? null);
+    setMaintenanceCalories(data.maintenanceCalories ?? null);
+    setExtraExerciseCalories(data.extraExerciseCalories ?? 0);
+    setStartingCut(data.startingCut ?? true);
+    setResults(data.results ?? null);
+    setGoalDate(data.goalDate ?? null);
+    setMilestones(data.milestones ?? []);
+    setDailyDeficitValue(data.dailyDeficitValue ?? null);
+    setWeeklyLossValue(data.weeklyLossValue ?? null);
+  };
 
   const calculate = () => {
 
@@ -325,32 +362,7 @@ useEffect(() => {
     const saved = localStorage.getItem("cutforecast-data");
     if (!saved) return;
     const data = JSON.parse(saved);
-    setWeight(data.weight ?? "");
-    setBodyFat(data.bodyFat ?? "");
-    setTrainingDays(data.trainingDays ?? "");
-    setSex(data.sex ?? "");
-    setHeight(data.height ?? "");
-    setAge(data.age ?? "");
-    setGoalSpeed(data.goalSpeed ?? "moderate");
-    setTargetBodyFat(data.targetBodyFat ?? "");
-    setWeightUnit(data.weightUnit ?? "kg");
-    setHeightUnit(data.heightUnit ?? "cm");
-    setWeightSt(data.weightSt ?? "");
-    setWeightLb(data.weightLb ?? "");
-    setHeightFt(data.heightFt ?? "");
-    setHeightIn(data.heightIn ?? "");
-    setCustomCalories(data.customCalories ?? "");
-    setCustomProtein(data.customProtein ?? "");
-    setStepTarget(data.stepTarget ?? null);
-    setCustomSteps(data.customSteps ?? null);
-    setMaintenanceCalories(data.maintenanceCalories ?? null);
-    setExtraExerciseCalories(data.extraExerciseCalories ?? 0);
-    setStartingCut(data.startingCut ?? true);
-    setResults(data.results ?? null);
-    setGoalDate(data.goalDate ?? null);
-    setMilestones(data.milestones ?? []);
-    setDailyDeficitValue(data.dailyDeficitValue ?? null);
-    setWeeklyLossValue(data.weeklyLossValue ?? null);
+    restorePlan(data);
   } catch {
     localStorage.removeItem("cutforecast-data");
   } finally {
@@ -367,6 +379,52 @@ useEffect(() => {
     customSteps, extraExerciseCalories, startingCut,
   }));
 }, [hydrated, weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age, weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones, customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue, customSteps, extraExerciseCalories, startingCut]);
+
+useEffect(() => {
+  const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    setAuthUser(session?.user ?? null);
+  });
+  supabase.auth.getUser().then(({ data }) => setAuthUser(data.user));
+  return () => listener.subscription.unsubscribe();
+}, []);
+
+useEffect(() => {
+  if (!authUser) {
+    setCloudReady(false);
+    return;
+  }
+
+  let active = true;
+  setCloudReady(false);
+  supabase.from("user_plans").select("plan").eq("user_id", authUser.id).maybeSingle().then(({ data }) => {
+    if (active && data?.plan) restorePlan(data.plan as Record<string, any>);
+    if (active) setCloudReady(true);
+  });
+  return () => { active = false; };
+}, [authUser]);
+
+useEffect(() => {
+  if (!hydrated || !authUser || !cloudReady) return;
+  const plan = {
+    weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age,
+    weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones,
+    customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue,
+    customSteps, extraExerciseCalories, startingCut,
+  };
+  supabase.from("user_plans").upsert({ user_id: authUser.id, plan, updated_at: new Date().toISOString() });
+}, [hydrated, authUser, cloudReady, weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age, weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones, customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue, customSteps, extraExerciseCalories, startingCut]);
+
+const handleAuth = async (mode: "sign-in" | "sign-up") => {
+  if (!authEmail || authPassword.length < 8) {
+    setAuthMessage("Enter an email and a password with at least 8 characters.");
+    return;
+  }
+  const result = mode === "sign-up"
+    ? await supabase.auth.signUp({ email: authEmail, password: authPassword, options: { emailRedirectTo: window.location.origin } })
+    : await supabase.auth.signInWithPassword({ email: authEmail, password: authPassword });
+  setAuthMessage(result.error ? result.error.message : mode === "sign-up" ? "Check your email to confirm your account, then sign in here." : "Signed in — your plan will now sync across devices.");
+  if (!result.error && mode === "sign-in") setAuthOpen(false);
+};
 
 const resetPlan = () => {
   localStorage.removeItem("cutforecast-data");
@@ -688,9 +746,29 @@ const applyScenario = () => {
         Drag the graph to simulate cheat days and watch your timeline adjust.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
-            <span className="rounded-full bg-zinc-900/80 px-3 py-1.5 text-zinc-400">Your plan saves automatically on this device</span>
+            <span className="rounded-full bg-zinc-900/80 px-3 py-1.5 text-zinc-400">{authUser ? "Plan syncing securely across your devices" : "Your plan saves automatically on this device"}</span>
+            {authUser ? (
+              <button onClick={() => supabase.auth.signOut()} className="rounded-full border border-sky-400/40 px-3 py-1.5 font-semibold text-sky-200">Signed in as {authUser.email} · Sign out</button>
+            ) : (
+              <button onClick={() => { setAuthOpen(!authOpen); setAuthMessage(""); }} className="rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1.5 font-semibold text-emerald-200">Create account to sync</button>
+            )}
             {(results || weight || weightSt) && <button onClick={resetPlan} className="rounded-full border border-zinc-700 px-3 py-1.5 font-semibold text-zinc-300 hover:border-rose-400 hover:text-rose-200">Start a new plan</button>}
           </div>
+          {authOpen && !authUser && (
+            <div className="mx-auto max-w-md rounded-2xl border border-emerald-400/20 bg-zinc-900 p-4 text-left shadow-xl">
+              <h2 className="text-lg font-bold">Save your plan everywhere</h2>
+              <p className="mt-1 text-sm text-zinc-400">Create a free account to keep your plan and weekly check-ins when you switch device.</p>
+              <div className="mt-3 space-y-2">
+                <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="Email address" className="w-full rounded-lg bg-zinc-800 p-3 text-sm" />
+                <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="Password (8+ characters)" className="w-full rounded-lg bg-zinc-800 p-3 text-sm" />
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => handleAuth("sign-up")} className="rounded-lg bg-emerald-400 px-3 py-2 font-bold text-zinc-950">Create free account</button>
+                  <button onClick={() => handleAuth("sign-in")} className="rounded-lg bg-zinc-700 px-3 py-2 font-bold">Sign in</button>
+                </div>
+                {authMessage && <p role="status" className="text-xs text-emerald-200">{authMessage}</p>}
+              </div>
+            </div>
+          )}
         </header>
         <section className="grid md:grid-cols-2 gap-5">
 
