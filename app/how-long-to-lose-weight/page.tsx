@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Calculator from "../page";
+import { WeightLossTimelineCalculator } from "../tool-calculators";
 
 export const metadata: Metadata = {
   title: "How Long Does It Take To Lose Weight? | CutForecast",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function HowLongToLoseWeightPage() {
-  return <Calculator />;
+  return <WeightLossTimelineCalculator />;
 }

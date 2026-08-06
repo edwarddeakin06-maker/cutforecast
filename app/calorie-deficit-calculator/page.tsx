@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Calculator from "../page";
+import { CalorieDeficitCalculator } from "../tool-calculators";
 
 export const metadata: Metadata = {
   title: "Calorie Deficit Calculator | CutForecast",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function CalorieDeficitCalculatorPage() {
-  return <Calculator />;
+  return <CalorieDeficitCalculator />;
 }

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Calculator from "../page";
+import { BodyFatCalculator } from "../tool-calculators";
 
 export const metadata: Metadata = {
   title: "Body Fat Calculator | CutForecast",
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function BodyFatCalculatorPage() {
-  return <Calculator />;
+  return <BodyFatCalculator />;
 }
