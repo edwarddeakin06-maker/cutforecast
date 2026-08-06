@@ -189,6 +189,7 @@ export default function Home() {
   const [authPassword, setAuthPassword] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [cloudReady, setCloudReady] = useState(false);
+  const [shareMessage, setShareMessage] = useState("");
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
   const latestCheckin = checkins[checkins.length - 1];
@@ -684,7 +685,10 @@ const downloadShareImage = () => {
   if (!ctx) return;
 
   // background
-  ctx.fillStyle = "#18181b";
+  const background = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+  background.addColorStop(0, "#08131a");
+  background.addColorStop(1, "#12352b");
+  ctx.fillStyle = background;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
   const img = new Image();
@@ -727,6 +731,22 @@ ctx.fillText(`Start Weight: ${startWeightText}`, 50, 470);
     link.href = canvas.toDataURL("image/png");
     link.click();
   };
+};
+const sharePlan = async () => {
+  if (!results) return;
+  const text = `My CutForecast plan: ${results.suggestedCalories} kcal/day, ${results.proteinTarget}g protein, and a ${results.weeksToGoal}-week timeline to ${results.targetBF}% body fat.`;
+
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: "My CutForecast plan", text, url: "https://cutforecast.com" });
+      setShareMessage("Thanks for sharing your plan.");
+    } else {
+      await navigator.clipboard.writeText(`${text} https://cutforecast.com`);
+      setShareMessage("Plan summary copied — paste it into your post or message.");
+    }
+  } catch {
+    setShareMessage("");
+  }
 };
 const applyScenario = () => {
 
@@ -1378,11 +1398,12 @@ pointRadius: 0
 
     <div
   ref={shareCardRef}
-  className="bg-zinc-900 text-white p-6 rounded-xl max-w-sm mx-auto"
+  className="relative overflow-hidden border border-emerald-400/20 bg-gradient-to-br from-emerald-950 via-zinc-900 to-sky-950 text-white p-6 rounded-2xl max-w-sm mx-auto shadow-xl"
 >
-  <h3 className="text-xl font-bold">CutForecast Plan</h3>
+  <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">My CutForecast plan</p>
+  <h3 className="mt-2 text-2xl font-black">Built for the long run.</h3>
 
-  <p>
+  <p className="mt-4 text-sm text-zinc-300">
 Start Weight: {weightUnit === "kg"
   ? `${weight} kg`
   : `${weightSt} st ${weightLb} lb`}
@@ -1390,11 +1411,12 @@ Start Weight: {weightUnit === "kg"
 
   {results && (
     <>
-      <p>Goal Body Fat: {results.targetBF}%</p>
-      <p>Calories: {results.suggestedCalories} kcal</p>
-      <p>Protein: {results.proteinTarget} g/day</p>
-      <p>Steps: {stepTarget} / day</p>
-      <p>Goal Date: {goalDate}</p>
+      <div className="mt-4 grid grid-cols-2 gap-2 text-left text-sm">
+        <div className="rounded-lg bg-white/10 p-3"><p className="text-zinc-400">Calories</p><p className="text-lg font-bold">{results.suggestedCalories}</p></div>
+        <div className="rounded-lg bg-white/10 p-3"><p className="text-zinc-400">Timeline</p><p className="text-lg font-bold">{results.weeksToGoal} weeks</p></div>
+        <div className="rounded-lg bg-white/10 p-3"><p className="text-zinc-400">Protein</p><p className="text-lg font-bold">{results.proteinTarget}g</p></div>
+        <div className="rounded-lg bg-white/10 p-3"><p className="text-zinc-400">Goal date</p><p className="text-sm font-bold">{goalDate}</p></div>
+      </div>
     </>
   )}
 
@@ -1403,12 +1425,12 @@ Start Weight: {weightUnit === "kg"
   </p>
 </div>
 
-    <button
-  onClick={() => downloadShareImage()}
-  className="mt-4 bg-blue-500 px-5 py-2 rounded font-bold cursor-pointer"
->
-      Download Share Image
-    </button>
+    <div className="flex flex-wrap justify-center gap-2">
+      <button onClick={sharePlan} className="rounded-lg bg-emerald-400 px-5 py-2.5 font-bold text-zinc-950">Share my plan</button>
+      <button onClick={downloadShareImage} className="rounded-lg bg-sky-500 px-5 py-2.5 font-bold">Download image</button>
+    </div>
+    <p className="text-xs text-zinc-400">Share a goal, invite a training partner, and start your cut together.</p>
+    {shareMessage && <p role="status" className="text-xs text-emerald-300">{shareMessage}</p>}
 
   </div>
 )}
