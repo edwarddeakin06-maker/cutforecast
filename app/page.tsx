@@ -58,6 +58,13 @@ type ResultsType = {
   pace: "Sustainable" | "Ambitious" | "Aggressive";
 };
 
+type CheckIn = {
+  id: string;
+  week_number: number;
+  weight_kg: number;
+  created_at: string;
+};
+
 const generateTrend = (
   startWeight: number,
   targetWeight: number,
@@ -174,6 +181,7 @@ export default function Home() {
   const [checkInWeek, setCheckInWeek] = useState(1);
   const [checkInWeight, setCheckInWeight] = useState("");
   const [checkInMessage, setCheckInMessage] = useState("");
+  const [checkins, setCheckins] = useState<CheckIn[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -183,6 +191,20 @@ export default function Home() {
   const [cloudReady, setCloudReady] = useState(false);
   // 🔥 Default empty graph
   const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
+  const latestCheckin = checkins[checkins.length - 1];
+  const expectedAtLatestCheckin = latestCheckin && results
+    ? results.trend[Math.min(latestCheckin.week_number, results.trend.length) - 1]
+    : null;
+  const checkinDifference = latestCheckin && expectedAtLatestCheckin !== null
+    ? latestCheckin.weight_kg - expectedAtLatestCheckin
+    : null;
+  const progressStatus = checkinDifference === null
+    ? null
+    : checkinDifference > 0.25
+    ? "Behind forecast"
+    : checkinDifference < -0.25
+    ? "Ahead of forecast"
+    : "On track";
 
   const restorePlan = (data: Record<string, any>) => {
     setWeight(data.weight ?? "");
@@ -211,6 +233,7 @@ export default function Home() {
     setMilestones(data.milestones ?? []);
     setDailyDeficitValue(data.dailyDeficitValue ?? null);
     setWeeklyLossValue(data.weeklyLossValue ?? null);
+    setCheckins(data.checkins ?? []);
   };
 
   const calculate = () => {
@@ -376,9 +399,9 @@ useEffect(() => {
     weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age,
     weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones,
     customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue,
-    customSteps, extraExerciseCalories, startingCut,
+    customSteps, extraExerciseCalories, startingCut, checkins,
   }));
-}, [hydrated, weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age, weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones, customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue, customSteps, extraExerciseCalories, startingCut]);
+}, [hydrated, weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age, weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones, customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue, customSteps, extraExerciseCalories, startingCut, checkins]);
 
 useEffect(() => {
   const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -396,8 +419,12 @@ useEffect(() => {
 
   let active = true;
   setCloudReady(false);
-  supabase.from("user_plans").select("plan").eq("user_id", authUser.id).maybeSingle().then(({ data }) => {
-    if (active && data?.plan) restorePlan(data.plan as Record<string, any>);
+  Promise.all([
+    supabase.from("user_plans").select("plan").eq("user_id", authUser.id).maybeSingle(),
+    supabase.from("user_checkins").select("id, week_number, weight_kg, created_at").eq("user_id", authUser.id).order("week_number"),
+  ]).then(([planResult, checkinResult]) => {
+    if (active && planResult.data?.plan) restorePlan(planResult.data.plan as Record<string, any>);
+    if (active && checkinResult.data) setCheckins(checkinResult.data as CheckIn[]);
     if (active) setCloudReady(true);
   });
   return () => { active = false; };
@@ -532,7 +559,7 @@ TDEE += stepBurn + extraExerciseCalories;
 
   setMilestones(milestoneWeights);
 };
-const applyCheckIn = () => {
+const applyCheckIn = async () => {
   if (!results || !checkInWeight) return;
 
   const enteredWeight = Number(checkInWeight);
@@ -554,6 +581,24 @@ const applyCheckIn = () => {
   ];
   const updatedWeeks = week + remainingWeeks;
   const difference = loggedWeight - expectedWeight;
+  const localCheckin: CheckIn = {
+    id: `${week}-${Date.now()}`,
+    week_number: week,
+    weight_kg: Number(loggedWeight.toFixed(2)),
+    created_at: new Date().toISOString(),
+  };
+
+  setCheckins((current) => [...current.filter((entry) => entry.week_number !== week), localCheckin].sort((a, b) => a.week_number - b.week_number));
+
+  if (authUser) {
+    await supabase.from("user_checkins").delete().eq("week_number", week);
+    const { data } = await supabase.from("user_checkins").insert({
+      user_id: authUser.id,
+      week_number: week,
+      weight_kg: loggedWeight,
+    }).select("id, week_number, weight_kg, created_at").single();
+    if (data) setCheckins((current) => [...current.filter((entry) => entry.week_number !== week), data as CheckIn].sort((a, b) => a.week_number - b.week_number));
+  }
 
   setResults({ ...results, trend: adjustedTrend, weeksToGoal: updatedWeeks });
   setGoalDate(dayjs().add(updatedWeeks, "week").format("MMM D YYYY"));
@@ -1131,6 +1176,22 @@ Apply scenario
               </div>
               <button onClick={applyCheckIn} className="w-full rounded bg-sky-400 px-4 py-2 text-sm font-bold text-zinc-950">Refresh forecast</button>
               {checkInMessage && <p className="text-xs text-sky-100">{checkInMessage}</p>}
+              {progressStatus && (
+                <div className={`rounded-lg border p-3 text-center ${progressStatus === "On track" ? "border-emerald-400/30 bg-emerald-400/10" : progressStatus === "Ahead of forecast" ? "border-sky-400/30 bg-sky-400/10" : "border-amber-400/30 bg-amber-400/10"}`}>
+                  <p className="text-xs font-bold uppercase tracking-wider">{progressStatus}</p>
+                  <p className="mt-1 text-xs text-zinc-300">Latest check-in: {weightUnit === "kg" ? `${latestCheckin?.weight_kg} kg` : `${Math.round((latestCheckin?.weight_kg || 0) * 2.20462)} lb`} at week {latestCheckin?.week_number}</p>
+                </div>
+              )}
+              {checkins.length > 0 && (
+                <div className="border-t border-white/10 pt-3">
+                  <p className="text-xs font-semibold text-zinc-300">Check-in history {authUser ? "· synced to your account" : "· saved on this device"}</p>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                    {checkins.slice(-4).map((entry) => (
+                      <div key={entry.id} className="rounded bg-zinc-900 p-2 text-zinc-300">Week {entry.week_number}: <span className="font-semibold text-white">{weightUnit === "kg" ? `${entry.weight_kg} kg` : `${Math.round(entry.weight_kg * 2.20462)} lb`}</span></div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           </div>
@@ -1231,6 +1292,20 @@ tension: 0.4,
 pointRadius: 5,
 pointHoverRadius: 8,
 pointHitRadius: 12,
+},
+
+{
+label: "Your check-ins",
+data: (results?.trend || emptyTrend).map((_, i) => {
+  const entry = checkins.find((checkin) => checkin.week_number === i + 1);
+  if (!entry) return null;
+  return weightUnit === "kg" ? entry.weight_kg : parseFloat((entry.weight_kg * 2.20462).toFixed(1));
+}),
+borderColor: "#0ea5e9",
+backgroundColor: "#0ea5e9",
+showLine: false,
+pointRadius: 6,
+pointHoverRadius: 8,
 },
 
 {
