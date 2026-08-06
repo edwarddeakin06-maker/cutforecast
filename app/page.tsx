@@ -175,6 +175,7 @@ weight += (waterOffset - previousOffset);
 export default function Home({ embedded = false, goalAmountKg }: { embedded?: boolean; goalAmountKg?: number }) {
   const chartRef = useRef<ChartJS<"line"> | null>(null);
   const dragStartTrendRef = useRef<number[] | null>(null);
+  const dragStartWeeksRef = useRef<number | null>(null);
   const pathname = usePathname();
   const pageCopy = {
     "/body-fat-calculator": {
@@ -728,6 +729,7 @@ useEffect(() => {
 
     if (points.length > 0) {
       dragStartTrendRef.current = [...results.trend];
+      dragStartWeeksRef.current = results.weeksToGoal;
       setDraggingIndex(points[0].index);
     }
   };
@@ -749,20 +751,34 @@ useEffect(() => {
     updated[draggingIndex] = parseFloat(newValue.toFixed(1));
 
     const target = Number(results.targetWeight);
-    const pointsRemaining = Math.max(1, updated.length - 1 - draggingIndex);
-
     for (let i = draggingIndex + 1; i < updated.length; i++) {
-      const progress = (i - draggingIndex) / pointsRemaining;
-      updated[i] = parseFloat((newValue + (target - newValue) * progress).toFixed(1));
+      const offset = newValue - originalTrend[draggingIndex];
+      updated[i] = parseFloat((originalTrend[i] + offset).toFixed(1));
     }
     const changeFromForecast = newValue - originalTrend[draggingIndex];
-    setCheatImpact(changeFromForecast > 0 ? Math.ceil((changeFromForecast / Math.max(results.weeklyLossKg, 0.05)) * 7) : null);
-    setResults({ ...results, trend: updated });
+    const weeklyRate = Math.max(results.weeklyLossKg, 0.05);
+    const extraWeeks = changeFromForecast > 0 ? Math.ceil(changeFromForecast / weeklyRate) : 0;
+    let finalTrend = updated;
+
+    if (extraWeeks > 0) {
+      finalTrend = [...updated];
+      let currentWeight = finalTrend[finalTrend.length - 1];
+      for (let week = 0; week < extraWeeks; week++) {
+        currentWeight = Math.max(target, currentWeight - weeklyRate);
+        finalTrend.push(Number(currentWeight.toFixed(1)));
+      }
+    }
+
+    const weeksToGoal = (dragStartWeeksRef.current ?? results.weeksToGoal) + extraWeeks;
+    setCheatImpact(changeFromForecast > 0 ? extraWeeks * 7 : null);
+    setResults({ ...results, trend: finalTrend, weeksToGoal });
+    setGoalDate(dayjs().add(weeksToGoal, "week").format("MMM D YYYY"));
   };
 
   const handleMouseUp = () => {
     setDraggingIndex(null);
     dragStartTrendRef.current = null;
+    dragStartWeeksRef.current = null;
   };
 const downloadShareImage = () => {
   const chart = chartRef.current;
