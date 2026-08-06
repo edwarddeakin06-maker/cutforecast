@@ -65,6 +65,10 @@ type CheckIn = {
   created_at: string;
 };
 
+type AnalyticsWindow = Window & {
+  gtag?: (command: "event", eventName: string, parameters?: Record<string, string | number | boolean>) => void;
+};
+
 const generateTrend = (
   startWeight: number,
   targetWeight: number,
@@ -237,6 +241,10 @@ export default function Home() {
     setCheckins(data.checkins ?? []);
   };
 
+  const trackEvent = (eventName: string, parameters?: Record<string, string | number | boolean>) => {
+    (window as AnalyticsWindow).gtag?.("event", eventName, parameters);
+  };
+
   const calculate = () => {
 
   let w = Number(weight);
@@ -374,6 +382,7 @@ setMilestones(milestoneWeights);
 
 setCheatImpact(null);
 setCheckInMessage("");
+trackEvent("plan_calculated", { goal_speed: goalSpeed, pace });
 };
   useEffect(() => {
   if (navigator.language === "en-GB") {
@@ -451,6 +460,7 @@ const handleAuth = async (mode: "sign-in" | "sign-up") => {
     ? await supabase.auth.signUp({ email: authEmail, password: authPassword, options: { emailRedirectTo: window.location.origin } })
     : await supabase.auth.signInWithPassword({ email: authEmail, password: authPassword });
   setAuthMessage(result.error ? result.error.message : mode === "sign-up" ? "Check your email to confirm your account, then sign in here." : "Signed in — your plan will now sync across devices.");
+  if (!result.error) trackEvent(mode === "sign-up" ? "account_created" : "account_signed_in");
   if (!result.error && mode === "sign-in") setAuthOpen(false);
 };
 
@@ -610,6 +620,7 @@ const applyCheckIn = async () => {
       ? `You are ${(Math.abs(difference)).toFixed(1)} kg ahead of forecast. Your timeline has been refreshed.`
       : "You are tracking close to forecast. Your timeline has been refreshed."
   );
+  trackEvent("weekly_checkin_added", { week_number: week, signed_in: Boolean(authUser) });
 };
 useEffect(() => {
   if (results && customCalories) {
@@ -740,8 +751,10 @@ const sharePlan = async () => {
     if (navigator.share) {
       await navigator.share({ title: "My CutForecast plan", text, url: "https://cutforecast.com" });
       setShareMessage("Thanks for sharing your plan.");
+      trackEvent("plan_shared", { method: "native" });
     } else {
       await navigator.clipboard.writeText(`${text} https://cutforecast.com`);
+      trackEvent("plan_shared", { method: "clipboard" });
       setShareMessage("Plan summary copied — paste it into your post or message.");
     }
   } catch {
@@ -1072,6 +1085,13 @@ className="w-full p-3 bg-zinc-800 rounded"
                 </div>
                 <p className="text-center text-xs text-zinc-500">Goal: {results.targetBF}% body fat · {stepTarget} daily steps · maintenance after goal ~{Math.round(results.suggestedCalories + 500)} kcal</p>
               </>
+            )}
+            {results && !authUser && (
+              <div className="rounded-xl border border-sky-400/25 bg-sky-400/10 p-4">
+                <p className="font-semibold text-sky-100">Keep this plan when you switch device.</p>
+                <p className="mt-1 text-xs leading-5 text-zinc-300">Create a free account to sync your plan, weekly weigh-ins, and forecast across phone and desktop.</p>
+                <button onClick={() => { setAuthOpen(true); setAuthMessage(""); trackEvent("account_prompt_opened", { source: "results" }); }} className="mt-3 rounded-lg bg-sky-400 px-3 py-2 text-sm font-bold text-zinc-950">Save my plan for free</button>
+              </div>
             )}
             {results && (
           <div className="bg-zinc-900 p-4 rounded-xl mt-4 space-y-3">
