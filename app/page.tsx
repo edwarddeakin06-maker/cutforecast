@@ -1,5 +1,6 @@
 "use client";
 import html2canvas from "html2canvas";
+import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
@@ -823,6 +824,12 @@ const applyScenario = () => {
         training frequency and realistic fat-loss modelling.
         Drag the graph to simulate cheat days and watch your timeline adjust.
           </p>
+          <nav aria-label="CutForecast tools" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm font-semibold text-zinc-300">
+            <Link href="/" className="transition hover:text-emerald-300">Cut calculator</Link>
+            <Link href="/body-fat-calculator" className="transition hover:text-emerald-300">Body fat calculator</Link>
+            <Link href="/calorie-deficit-calculator" className="transition hover:text-emerald-300">Calorie deficit</Link>
+            <Link href="/how-long-to-lose-weight" className="transition hover:text-emerald-300">Weight-loss timeline</Link>
+          </nav>
           <div className="flex flex-wrap items-center justify-center gap-3 text-xs">
             <span className="rounded-full bg-zinc-900/80 px-3 py-1.5 text-zinc-400">{authUser ? "Plan syncing securely across your devices" : "Your plan saves automatically on this device"}</span>
             {authUser ? (
