@@ -407,6 +407,9 @@ setMilestones(milestoneWeights);
 setCheatImpact(null);
 setCheckInMessage("");
 trackEvent("plan_calculated", { goal_speed: goalSpeed, pace });
+if (window.innerWidth < 768) {
+  window.setTimeout(() => document.getElementById("your-plan")?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+}
 };
   useEffect(() => {
   if (navigator.language === "en-GB") {
@@ -1101,7 +1104,7 @@ className="w-full p-3 bg-zinc-800 rounded"
           </div>
 
           {/* 🔥 PLAN (always visible) */}
-          <div className="bg-zinc-900 p-5 rounded-2xl space-y-3">
+          <div id="your-plan" className="bg-zinc-900 p-5 rounded-2xl space-y-3">
             <div className="flex items-center gap-3">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-400 font-bold text-zinc-950">2</span>
               <h2 className="text-xl font-semibold">Your Plan</h2>
