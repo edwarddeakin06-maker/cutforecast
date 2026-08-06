@@ -67,6 +67,20 @@ type CheckIn = {
   created_at: string;
 };
 
+type WeeklyHabits = {
+  calories: boolean;
+  protein: boolean;
+  steps: boolean;
+  training: boolean;
+};
+
+const defaultWeeklyHabits: WeeklyHabits = {
+  calories: false,
+  protein: false,
+  steps: false,
+  training: false,
+};
+
 type AnalyticsWindow = Window & {
   gtag?: (command: "event", eventName: string, parameters?: Record<string, string | number | boolean>) => void;
 };
@@ -210,6 +224,7 @@ export default function Home({ embedded = false }: { embedded?: boolean }) {
   const [checkInWeight, setCheckInWeight] = useState("");
   const [checkInMessage, setCheckInMessage] = useState("");
   const [checkins, setCheckins] = useState<CheckIn[]>([]);
+  const [weeklyHabits, setWeeklyHabits] = useState<WeeklyHabits>(defaultWeeklyHabits);
   const [hydrated, setHydrated] = useState(false);
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [authOpen, setAuthOpen] = useState(false);
@@ -263,6 +278,7 @@ export default function Home({ embedded = false }: { embedded?: boolean }) {
     setDailyDeficitValue(data.dailyDeficitValue ?? null);
     setWeeklyLossValue(data.weeklyLossValue ?? null);
     setCheckins(data.checkins ?? []);
+    setWeeklyHabits(data.weeklyHabits ?? defaultWeeklyHabits);
   };
 
   const trackEvent = (eventName: string, parameters?: Record<string, string | number | boolean>) => {
@@ -436,9 +452,9 @@ useEffect(() => {
     weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age,
     weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones,
     customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue,
-    customSteps, extraExerciseCalories, startingCut, checkins,
+    customSteps, extraExerciseCalories, startingCut, checkins, weeklyHabits,
   }));
-}, [hydrated, weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age, weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones, customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue, customSteps, extraExerciseCalories, startingCut, checkins]);
+}, [hydrated, weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age, weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones, customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue, customSteps, extraExerciseCalories, startingCut, checkins, weeklyHabits]);
 
 useEffect(() => {
   const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -473,10 +489,10 @@ useEffect(() => {
     weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age,
     weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones,
     customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue,
-    customSteps, extraExerciseCalories, startingCut,
+    customSteps, extraExerciseCalories, startingCut, weeklyHabits,
   };
   supabase.from("user_plans").upsert({ user_id: authUser.id, plan, updated_at: new Date().toISOString() });
-}, [hydrated, authUser, cloudReady, weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age, weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones, customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue, customSteps, extraExerciseCalories, startingCut]);
+}, [hydrated, authUser, cloudReady, weight, bodyFat, trainingDays, goalSpeed, stepTarget, results, targetBodyFat, sex, height, age, weightUnit, heightUnit, weightSt, weightLb, heightFt, heightIn, goalDate, milestones, customCalories, customProtein, maintenanceCalories, dailyDeficitValue, weeklyLossValue, customSteps, extraExerciseCalories, startingCut, weeklyHabits]);
 
 const handleAuth = async (mode: "sign-in" | "sign-up") => {
   if (!authEmail || authPassword.length < 8) {
@@ -495,7 +511,7 @@ const resetPlan = () => {
   localStorage.removeItem("cutforecast-data");
   setWeight(""); setBodyFat(""); setTrainingDays(""); setTargetBodyFat(""); setSex(""); setHeight(""); setAge("");
   setWeightSt(""); setWeightLb(""); setHeightFt(""); setHeightIn(""); setCustomCalories(""); setCustomProtein("");
-  setStepTarget(null); setCustomSteps(null); setMaintenanceCalories(null); setResults(null); setGoalDate(null); setMilestones([]);
+  setStepTarget(null); setCustomSteps(null); setMaintenanceCalories(null); setResults(null); setGoalDate(null); setMilestones([]); setWeeklyHabits(defaultWeeklyHabits);
   setDailyDeficitValue(null); setWeeklyLossValue(null); setExtraExerciseCalories(0); setCheckInWeight(""); setCheckInMessage("");
 };
 const recalculateFromCustom = () => {
@@ -1132,6 +1148,25 @@ className="w-full p-3 bg-zinc-800 rounded"
                   <div className="rounded-lg bg-zinc-800 p-2"><p className="font-semibold">{results.carbTarget}g</p><p className="text-xs text-zinc-500">carbs</p></div>
                 </div>
                 <p className="text-center text-xs text-zinc-500">Goal: {results.targetBF}% body fat · {stepTarget} daily steps · maintenance after goal ~{Math.round(results.suggestedCalories + 500)} kcal</p>
+                <div className="rounded-xl border border-emerald-400/20 bg-emerald-400/5 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div><h3 className="font-semibold text-emerald-100">This week&apos;s focus</h3><p className="mt-1 text-xs text-zinc-400">Tick these off as you build consistency.</p></div>
+                    <span className="rounded-full bg-emerald-400/10 px-2.5 py-1 text-xs font-bold text-emerald-300">{Object.values(weeklyHabits).filter(Boolean).length}/4</span>
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    {([
+                      { key: "calories", label: `Follow ~${results.suggestedCalories} kcal/day` },
+                      { key: "protein", label: `Hit ${results.proteinTarget}g protein/day` },
+                      { key: "steps", label: `Average ${stepTarget} daily steps` },
+                      { key: "training", label: `Complete ${trainingDays} training days` },
+                    ] as const).map((habit) => (
+                      <button key={habit.key} type="button" aria-pressed={weeklyHabits[habit.key]} onClick={() => { const complete = !weeklyHabits[habit.key]; setWeeklyHabits((current) => ({ ...current, [habit.key]: complete })); trackEvent("weekly_habit_toggled", { habit: habit.key, complete }); }} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left text-xs transition ${weeklyHabits[habit.key] ? "border-emerald-400/50 bg-emerald-400/10 text-emerald-100" : "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-500"}`}>
+                        <span aria-hidden="true" className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[11px] ${weeklyHabits[habit.key] ? "border-emerald-300 bg-emerald-300 text-zinc-950" : "border-zinc-600"}`}>{weeklyHabits[habit.key] ? "✓" : ""}</span>
+                        {habit.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </>
             )}
             {results && !authUser && (
