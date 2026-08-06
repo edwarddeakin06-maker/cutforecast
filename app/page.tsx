@@ -148,7 +148,7 @@ weight += (waterOffset - previousOffset);
   return arr;
 };
 
-export default function Home() {
+export default function Home({ embedded = false }: { embedded?: boolean }) {
   const chartRef = useRef<any>(null);
   const pathname = usePathname();
   const pageCopy = {
@@ -844,7 +844,11 @@ const applyScenario = () => {
           <p className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">
             CutForecast <span className="h-1 w-1 rounded-full bg-emerald-300" /> Personal cutting plan
           </p>
-          <h1 className="text-4xl font-black tracking-tight sm:text-6xl">{pageCopy.title}</h1>
+          {embedded ? (
+            <h2 className="text-4xl font-black tracking-tight sm:text-6xl">Your personalised calculator</h2>
+          ) : (
+            <h1 className="text-4xl font-black tracking-tight sm:text-6xl">{pageCopy.title}</h1>
+          )}
           <p className="text-center text-zinc-400 max-w-2xl mx-auto text-base leading-7 sm:text-lg">
             {pageCopy.description}
           </p>

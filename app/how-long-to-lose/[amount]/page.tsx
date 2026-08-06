@@ -64,7 +64,7 @@ export default async function AmountPage({ params }: PageProps) {
           </div>
         </div>
       </section>
-      <Calculator />
+      <Calculator embedded />
       <section className="bg-zinc-950 px-4 pb-16 text-white sm:px-8">
         <div className="mx-auto max-w-3xl rounded-2xl border border-white/10 bg-zinc-900 p-6">
           <h2 className="text-2xl font-bold">Common questions about losing {formattedAmount}</h2>

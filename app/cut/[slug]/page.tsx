@@ -9,6 +9,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${title} Cut Calculator | CutForecast`,
     description: `Build a personalised ${title.toLowerCase()} cutting plan with calories, macros, and a realistic timeline.`,
+    robots: { index: false, follow: true },
   };
 }
 
