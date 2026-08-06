@@ -162,7 +162,7 @@ weight += (waterOffset - previousOffset);
   return arr;
 };
 
-export default function Home({ embedded = false }: { embedded?: boolean }) {
+export default function Home({ embedded = false, goalAmountKg }: { embedded?: boolean; goalAmountKg?: number }) {
   const chartRef = useRef<any>(null);
   const pathname = usePathname();
   const pageCopy = {
@@ -325,7 +325,7 @@ if (heightUnit === "ft") {
     return;
   }
 
-  if (targetBodyFatNumber < 4 || targetBodyFatNumber >= currentBodyFat) {
+  if (!goalAmountKg && (targetBodyFatNumber < 4 || targetBodyFatNumber >= currentBodyFat)) {
     setValidationError("Choose a target body-fat percentage below your current estimate (and at least 4%).");
     return;
   }
@@ -367,10 +367,16 @@ setStepTarget(steps);
 setCustomSteps(steps);
 const LBM = w * (1 - bf);
 
-const targetBF = targetBodyFatNumber;
-const tbf = targetBF / 100;
+const targetWeight = goalAmountKg ? w - goalAmountKg : LBM / (1 - targetBodyFatNumber / 100);
 
-const targetWeight = LBM / (1 - tbf);
+if (!Number.isFinite(targetWeight) || targetWeight < 35 || targetWeight >= w) {
+  setValidationError("Choose a weight-loss goal that keeps your target weight realistic for your current starting point.");
+  return;
+}
+
+const targetBF = goalAmountKg
+  ? Number((((targetWeight - LBM) / targetWeight) * 100).toFixed(1))
+  : targetBodyFatNumber;
 
 const weeklyLossKg = (dailyDeficit * 7) / 7700;
 
@@ -1062,15 +1068,23 @@ className="w-full p-3 bg-zinc-800 rounded"
 
 )}
 
-            <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={targetBodyFat}
-            onChange={(e) => setTargetBodyFat(e.target.value)}
-            placeholder="Target body fat % (e.g. 12)"
-            className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
-            />
+            {goalAmountKg ? (
+              <div className="rounded-xl border border-sky-400/30 bg-sky-400/10 p-3">
+                <p className="text-xs font-bold uppercase tracking-wider text-sky-300">Your page goal</p>
+                <p className="mt-1 font-semibold">Lose {goalAmountKg} kg from your current weight</p>
+                <p className="mt-1 text-xs text-zinc-400">Your forecast will calculate a goal date and estimated body-fat change for this amount.</p>
+              </div>
+            ) : (
+              <input
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={targetBodyFat}
+              onChange={(e) => setTargetBodyFat(e.target.value)}
+              placeholder="Target body fat % (e.g. 12)"
+              className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
+              />
+            )}
 
             <fieldset>
               <legend className="mb-2 text-sm font-semibold text-zinc-200">Choose your preferred pace</legend>

@@ -22,6 +22,13 @@ function formatAmount(amount: string) {
   return amount.replace(/-/g, " ").replace(/(\d+)(kg|lb)/i, "$1 $2");
 }
 
+function amountInKg(amount: string) {
+  const match = amount.match(/^(\d+(?:\.\d+)?)(kg|lb)$/i);
+  if (!match) return undefined;
+  const value = Number(match[1]);
+  return match[2].toLowerCase() === "lb" ? Number((value * 0.453592).toFixed(1)) : value;
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { amount } = await params;
   const formattedAmount = formatAmount(amount);
@@ -39,6 +46,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function AmountPage({ params }: PageProps) {
   const { amount } = await params;
   const formattedAmount = formatAmount(amount);
+  const goalAmountKg = amountInKg(amount);
   const faqSchema = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -64,7 +72,7 @@ export default async function AmountPage({ params }: PageProps) {
           </div>
         </div>
       </section>
-      <Calculator embedded />
+      <Calculator embedded goalAmountKg={goalAmountKg} />
       <section className="bg-zinc-950 px-4 pb-16 text-white sm:px-8">
         <div className="mx-auto max-w-3xl rounded-2xl border border-white/10 bg-zinc-900 p-6">
           <h2 className="text-2xl font-bold">Common questions about losing {formattedAmount}</h2>
