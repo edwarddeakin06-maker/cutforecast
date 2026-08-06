@@ -3,6 +3,10 @@ import Calculator from "../../page";
 
 type PageProps = { params: Promise<{ amount: string }> };
 
+export function generateStaticParams() {
+  return ["5kg", "10kg", "15kg", "20kg"].map((amount) => ({ amount }));
+}
+
 const faqs = [
   {
     question: "How quickly can I safely lose weight?",
