@@ -1,6 +1,7 @@
 "use client";
 import html2canvas from "html2canvas";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
@@ -149,6 +150,28 @@ weight += (waterOffset - previousOffset);
 
 export default function Home() {
   const chartRef = useRef<any>(null);
+  const pathname = usePathname();
+  const pageCopy = {
+    "/body-fat-calculator": {
+      title: "Body Fat Calculator",
+      description: "Estimate the target weight, calorie target, macros, and timeline that fit your goal body-fat percentage.",
+    },
+    "/calorie-deficit-calculator": {
+      title: "Calorie Deficit Calculator",
+      description: "Build a practical calorie deficit, see your macro targets, and forecast a realistic fat-loss timeline.",
+    },
+    "/how-long-to-lose-weight": {
+      title: "How Long To Lose Weight?",
+      description: "Estimate how long your goal could take using your current body composition, activity, and preferred pace.",
+    },
+    "/weight-loss-calculator": {
+      title: "Weight Loss Calculator",
+      description: "Get a calorie target, macro split, goal date, and realistic weight-loss forecast tailored to your cut.",
+    },
+  }[pathname] ?? {
+    title: "Weight Loss Calculator",
+    description: "Predict how long it will take to reach your goal body fat using calorie deficits, training frequency and realistic fat-loss modelling. Drag the graph to simulate cheat days and watch your timeline adjust.",
+  };
 
   const [weight, setWeight] = useState("");
   const [bodyFat, setBodyFat] = useState("");
@@ -818,11 +841,9 @@ const applyScenario = () => {
           <p className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.18em] text-emerald-300">
             CutForecast <span className="h-1 w-1 rounded-full bg-emerald-300" /> Personal cutting plan
           </p>
-          <h1 className="text-4xl font-black tracking-tight sm:text-6xl">Weight Loss Calculator</h1>
+          <h1 className="text-4xl font-black tracking-tight sm:text-6xl">{pageCopy.title}</h1>
           <p className="text-center text-zinc-400 max-w-2xl mx-auto text-base leading-7 sm:text-lg">
-        Predict how long it will take to reach your goal body fat using calorie deficits,
-        training frequency and realistic fat-loss modelling.
-        Drag the graph to simulate cheat days and watch your timeline adjust.
+            {pageCopy.description}
           </p>
           <nav aria-label="CutForecast tools" className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm font-semibold text-zinc-300">
             <Link href="/" className="transition hover:text-emerald-300">Cut calculator</Link>
