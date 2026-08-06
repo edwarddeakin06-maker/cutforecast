@@ -1,8 +1,8 @@
 "use client";
-import html2canvas from "html2canvas";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 import { Line } from "react-chartjs-2";
@@ -13,7 +13,8 @@ import {
   PointElement,
   LineElement,
   Tooltip,
-  Legend
+  Legend,
+  type Plugin,
 } from "chart.js";
 import dayjs from "dayjs";
 
@@ -25,9 +26,9 @@ ChartJS.register(
   Tooltip,
   Legend
 );
-const hoverLine = {
+const hoverLine: Plugin<"line"> = {
   id: "hoverLine",
-  afterDraw(chart: any) {
+  afterDraw(chart) {
     if (chart.tooltip && chart.tooltip.dataPoints?.length) {
       const ctx = chart.ctx;
       const activePoint = chart.tooltip.dataPoints[0];
@@ -72,6 +73,15 @@ type WeeklyHabits = {
   protein: boolean;
   steps: boolean;
   training: boolean;
+};
+
+type SavedPlan = {
+  weight?: string; bodyFat?: string; trainingDays?: string; goalSpeed?: string; stepTarget?: number | null; results?: ResultsType | null;
+  targetBodyFat?: string; sex?: string; height?: string; age?: string; weightUnit?: string; heightUnit?: string;
+  weightSt?: string; weightLb?: string; heightFt?: string; heightIn?: string; goalDate?: string | null; milestones?: number[];
+  customCalories?: string; customProtein?: string; maintenanceCalories?: number | null; dailyDeficitValue?: number | null;
+  weeklyLossValue?: number | null; customSteps?: number | null; extraExerciseCalories?: number; startingCut?: boolean;
+  checkins?: CheckIn[]; weeklyHabits?: WeeklyHabits;
 };
 
 const defaultWeeklyHabits: WeeklyHabits = {
@@ -163,7 +173,7 @@ weight += (waterOffset - previousOffset);
 };
 
 export default function Home({ embedded = false, goalAmountKg }: { embedded?: boolean; goalAmountKg?: number }) {
-  const chartRef = useRef<any>(null);
+  const chartRef = useRef<ChartJS<"line"> | null>(null);
   const pathname = usePathname();
   const pageCopy = {
     "/body-fat-calculator": {
@@ -234,7 +244,7 @@ export default function Home({ embedded = false, goalAmountKg }: { embedded?: bo
   const [cloudReady, setCloudReady] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
   // 🔥 Default empty graph
-  const emptyTrend = Array.from({ length: 8 }, (_, i) => 0);
+  const emptyTrend = Array.from({ length: 8 }, () => 0);
   const latestCheckin = checkins[checkins.length - 1];
   const expectedAtLatestCheckin = latestCheckin && results
     ? results.trend[Math.min(latestCheckin.week_number, results.trend.length) - 1]
@@ -250,7 +260,7 @@ export default function Home({ embedded = false, goalAmountKg }: { embedded?: bo
     ? "Ahead of forecast"
     : "On track";
 
-  const restorePlan = (data: Record<string, any>) => {
+  const restorePlan = (data: SavedPlan) => {
     setWeight(data.weight ?? "");
     setBodyFat(data.bodyFat ?? "");
     setTrainingDays(data.trainingDays ?? "");
@@ -443,8 +453,8 @@ useEffect(() => {
   try {
     const saved = localStorage.getItem("cutforecast-data");
     if (!saved) return;
-    const data = JSON.parse(saved);
-    restorePlan(data);
+    const data: unknown = JSON.parse(saved);
+    if (data && typeof data === "object") restorePlan(data as SavedPlan);
   } catch {
     localStorage.removeItem("cutforecast-data");
   } finally {
@@ -482,7 +492,7 @@ useEffect(() => {
     supabase.from("user_plans").select("plan").eq("user_id", authUser.id).maybeSingle(),
     supabase.from("user_checkins").select("id, week_number, weight_kg, created_at").eq("user_id", authUser.id).order("week_number"),
   ]).then(([planResult, checkinResult]) => {
-    if (active && planResult.data?.plan) restorePlan(planResult.data.plan as Record<string, any>);
+    if (active && planResult.data?.plan) restorePlan(planResult.data.plan as unknown as SavedPlan);
     if (active && checkinResult.data) setCheckins(checkinResult.data as CheckIn[]);
     if (active) setCloudReady(true);
   });
@@ -513,12 +523,13 @@ const handleAuth = async (mode: "sign-in" | "sign-up") => {
   if (!result.error && mode === "sign-in") setAuthOpen(false);
 };
 
-const resetPlan = () => {
+const resetPlan = async () => {
   localStorage.removeItem("cutforecast-data");
   setWeight(""); setBodyFat(""); setTrainingDays(""); setTargetBodyFat(""); setSex(""); setHeight(""); setAge("");
   setWeightSt(""); setWeightLb(""); setHeightFt(""); setHeightIn(""); setCustomCalories(""); setCustomProtein("");
   setStepTarget(null); setCustomSteps(null); setMaintenanceCalories(null); setResults(null); setGoalDate(null); setMilestones([]); setWeeklyHabits(defaultWeeklyHabits);
-  setDailyDeficitValue(null); setWeeklyLossValue(null); setExtraExerciseCalories(0); setCheckInWeight(""); setCheckInMessage("");
+  setDailyDeficitValue(null); setWeeklyLossValue(null); setExtraExerciseCalories(0); setCheckInWeight(""); setCheckInWeek(1); setCheckInMessage(""); setCheckins([]);
+  if (authUser) await supabase.from("user_checkins").delete().eq("user_id", authUser.id);
 };
 const recalculateFromCustom = () => {
   if (!results || !customCalories) return;
@@ -579,10 +590,16 @@ TDEE += stepBurn + extraExerciseCalories;
   const weeklyLossKg = (dailyDeficit * 7) / 7700;
   setWeeklyLossValue(Number(weeklyLossKg.toFixed(2)));
 
-  const targetBF = Number(targetBodyFat) || 12;
-  const tbf = targetBF / 100;
+  const targetBodyFatNumber = Number(targetBodyFat) || 12;
+  const targetWeight = goalAmountKg ? w - goalAmountKg : LBM / (1 - targetBodyFatNumber / 100);
+  const targetBF = goalAmountKg
+    ? Number((((targetWeight - LBM) / targetWeight) * 100).toFixed(1))
+    : targetBodyFatNumber;
 
-  const targetWeight = LBM / (1 - tbf);
+  if (!Number.isFinite(targetWeight) || targetWeight < 35 || targetWeight >= w) {
+    setValidationError("Choose a weight-loss goal that keeps your target weight realistic for your current starting point.");
+    return;
+  }
 
   const weeksToGoal = Math.max(
     1,
@@ -593,6 +610,8 @@ TDEE += stepBurn + extraExerciseCalories;
 
   setResults({
     ...results,
+    targetWeight: targetWeight.toFixed(1),
+    targetBF,
     weeksToGoal,
     trend,
     suggestedCalories: calories,
@@ -651,7 +670,7 @@ const applyCheckIn = async () => {
   setCheckins((current) => [...current.filter((entry) => entry.week_number !== week), localCheckin].sort((a, b) => a.week_number - b.week_number));
 
   if (authUser) {
-    await supabase.from("user_checkins").delete().eq("week_number", week);
+    await supabase.from("user_checkins").delete().eq("user_id", authUser.id).eq("week_number", week);
     const { data } = await supabase.from("user_checkins").insert({
       user_id: authUser.id,
       week_number: week,
@@ -675,10 +694,12 @@ useEffect(() => {
   if (results && customCalories) {
     recalculateFromCustom();
   }
+  // Recalculation is deliberately triggered by custom controls only; adding results would create a state-update loop.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [customCalories, customSteps, extraExerciseCalories]);
 
   // 🔥 Dragging logic
-  const handleMouseDown = (e: any) => {
+  const handleMouseDown = (e: ReactMouseEvent<HTMLDivElement>) => {
     const chart = chartRef.current;
     if (!chart) return;
 
@@ -692,16 +713,18 @@ useEffect(() => {
     if (points.length > 0) setDraggingIndex(points[0].index);
   };
 
-  const handleMouseMove = (e: any) => {
+  const handleMouseMove = (e: ReactMouseEvent<HTMLDivElement>) => {
     if (draggingIndex === null || !results) return;
 
     const chart = chartRef.current;
+    if (!chart) return;
     const yAxis = chart.scales.y;
 
-    let newValue = yAxis.getValueForPixel(e.nativeEvent.offsetY);
-    newValue = Math.max(60, Math.min(120, newValue));
+    const valueAtPointer = yAxis.getValueForPixel(e.nativeEvent.offsetY);
+    if (typeof valueAtPointer !== "number") return;
+    const newValue = Math.max(60, Math.min(120, valueAtPointer));
 
-    let updated = [...results.trend];
+    const updated = [...results.trend];
     updated[draggingIndex] = parseFloat(newValue.toFixed(1));
 
     const target = Number(results.targetWeight);
@@ -712,7 +735,6 @@ useEffect(() => {
       const step = (current - target) / remaining;
       updated[i] = parseFloat((current - step).toFixed(1));
     }
-    const originalGoalWeeks = results.weeksToGoal;
     const newEndWeight = updated[updated.length - 1];
 
     if (newEndWeight > Number(results.targetWeight)) {
@@ -1599,21 +1621,21 @@ Start Weight: {weightUnit === "kg"
 <div className="mt-6 text-center space-y-2">
   <h3 className="text-white font-semibold">Popular fat loss timelines</h3>
 
-  <a href="/how-long-to-lose/5kg" className="block text-green-400">
+  <Link href="/how-long-to-lose/5kg" className="block text-green-400">
     How long to lose 5kg
-  </a>
+  </Link>
 
-  <a href="/how-long-to-lose/10kg" className="block text-green-400">
+  <Link href="/how-long-to-lose/10kg" className="block text-green-400">
     How long to lose 10kg
-  </a>
+  </Link>
 
-  <a href="/how-long-to-lose/15kg" className="block text-green-400">
+  <Link href="/how-long-to-lose/15kg" className="block text-green-400">
     How long to lose 15kg
-  </a>
+  </Link>
 
-  <a href="/how-long-to-lose/20kg" className="block text-green-400">
+  <Link href="/how-long-to-lose/20kg" className="block text-green-400">
     How long to lose 20kg
-  </a>
+  </Link>
 </div>
 
         {/* 🔥 FOOTER */}
