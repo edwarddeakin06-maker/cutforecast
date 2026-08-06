@@ -1028,15 +1028,28 @@ className="w-full p-3 bg-zinc-800 rounded"
             className="w-full p-3 bg-zinc-800 rounded placeholder-gray-400"
             />
 
-            <select
-  value={goalSpeed}
-  onChange={(e) => setGoalSpeed(e.target.value)}
-  className="w-full p-3 bg-zinc-800 rounded"
->
-  <option value="slow">Slow</option>
-  <option value="moderate">Moderate</option>
-  <option value="aggressive">Aggressive</option>
-</select>
+            <fieldset>
+              <legend className="mb-2 text-sm font-semibold text-zinc-200">Choose your preferred pace</legend>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { value: "slow", label: "Steady", detail: "300 kcal/day" },
+                  { value: "moderate", label: "Balanced", detail: "500 kcal/day" },
+                  { value: "aggressive", label: "Fast", detail: "700 kcal/day" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={goalSpeed === option.value}
+                    onClick={() => setGoalSpeed(option.value)}
+                    className={`rounded-xl border p-3 text-left transition ${goalSpeed === option.value ? "border-emerald-400 bg-emerald-400/10 text-white shadow-[0_0_0_1px_rgba(52,211,153,0.2)]" : "border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-zinc-500"}`}
+                  >
+                    <span className="block text-sm font-bold">{option.label}</span>
+                    <span className="mt-1 block text-[11px] text-zinc-400">{option.detail}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-xs leading-5 text-zinc-500">Your forecast uses this starting deficit and gives you full control to adjust calories and steps afterwards.</p>
+            </fieldset>
 
 <div className="flex items-center justify-between bg-zinc-800 p-3 rounded mt-2">
   <span className="text-sm text-zinc-400">
